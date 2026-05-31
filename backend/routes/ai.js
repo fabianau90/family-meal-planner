@@ -14,11 +14,19 @@ router.post('/suggest', async (req, res) => {
     .populate('recipe_id', 'title cuisine')
     .limit(10);
 
-  const memberSummary = members.map(m =>
-    `- ${m.name}: likes ${(m.cuisines || []).join(', ') || 'anything'}, ` +
-    `dietary: ${(m.dietary_restrictions || []).join(', ') || 'none'}, ` +
-    `dislikes: ${(m.dislikes || []).join(', ') || 'none'}`
-  ).join('\n');
+  const memberSummary = members.map(m => {
+    const dislikes = (m.dislikes || []).join(', ');
+    const age = m.age ? `age ${m.age}` : '';
+    return `- ${m.name}${age ? ` (${age})` : ''}: likes ${(m.cuisines || []).join(', ') || 'anything'}, ` +
+      `dietary: ${(m.dietary_restrictions || []).join(', ') || 'none'}, ` +
+      `dislikes: ${dislikes || 'none'}`;
+  }).join('\n');
+
+  // Build per-member dislike guidance for young children
+  const childDislikeNotes = members
+    .filter(m => m.dislikes?.length)
+    .map(m => `${m.name} dislikes: ${m.dislikes.join(', ')}`)
+    .join('\n');
 
   const ratedSummary = topRatings.length
     ? `\nPreviously loved recipes:\n${topRatings.map(r => `- ${r.recipe_id?.title}`).join('\n')}`
@@ -30,6 +38,10 @@ Keep suggestions practical and delicious.
 
 Family members eating today:
 ${memberSummary}${ratedSummary}
+
+Important guidance on dislikes:
+${childDislikeNotes || 'No specific dislikes.'}
+For young children, strongly prefer meals that avoid their disliked foods — but occasionally (about 1 in 4 suggestions) you may include a meal that contains a disliked ingredient in a mild or hidden way (e.g. blended into a sauce), to gently encourage trying new things. When you do this, note it briefly so the parent is aware.
 
 Format suggestions as a numbered list with the meal name, cuisine type, and a one-sentence description.`;
 
