@@ -10,41 +10,53 @@ router.post('/suggest', async (req, res) => {
   if (!member_ids?.length) return res.status(400).json({ error: 'member_ids required' });
 
   const members = await FamilyMember.find({ _id: { $in: member_ids } });
-  const topRatings = await Rating.find({ member_id: { $in: member_ids }, rating: 1 })
-    .populate('recipe_id', 'title cuisine')
-    .limit(10);
 
-  const memberSummary = members.map(m => {
-    return `- ${m.name} (age 6):
-    • Favourite foods/cuisines: ${[...(m.cuisines || []), ...(m.likes || [])].join(', ') || 'not specified'}
-    • Dietary restrictions: ${(m.dietary_restrictions || []).join(', ') || 'none'}
-    • Foods she loves: ${(m.likes || []).join(', ') || 'not specified'}
-    • Foods she dislikes: ${(m.dislikes || []).join(', ') || 'none'}`;
-  }).join('\n');
+  const [topRatings, allRatings] = await Promise.all([
+    Rating.find({ member_id: { $in: member_ids }, rating: 1 })
+      .populate('recipe_id', 'title cuisine ingredients')
+      .limit(15),
+    Rating.find({ member_id: { $in: member_ids }, rating: -1 })
+      .populate('recipe_id', 'title')
+      .limit(10),
+  ]);
 
-  const childDislikeNotes = members
-    .filter(m => m.dislikes?.length)
-    .map(m => m.dislikes.join(', '))
-    .join(', ');
+  const member = members[0];
+  const likes = (member?.likes || []).join(', ') || 'not yet specified';
+  const dislikes = (member?.dislikes || []).join(', ') || 'none';
+  const cuisines = (member?.cuisines || []).join(', ') || 'not yet specified';
+  const dietary = (member?.dietary_restrictions || []).join(', ') || 'none';
 
-  const ratedSummary = topRatings.length
-    ? `\nPreviously loved recipes:\n${topRatings.map(r => `- ${r.recipe_id?.title}`).join('\n')}`
-    : '';
+  const lovedRecipes = topRatings.length
+    ? topRatings.map(r => `- ${r.recipe_id?.title} (${r.recipe_id?.cuisine || 'unknown cuisine'})`).join('\n')
+    : 'None rated yet';
 
-  const systemPrompt = `You are a meal planning assistant helping a parent plan meals for their 6-year-old daughter Yvette.
-Your suggestions must be based ONLY on what you know about Yvette's preferences below — do not suggest random internet recipes without context.
+  const dislikedRecipes = allRatings.length
+    ? allRatings.map(r => `- ${r.recipe_id?.title}`).join('\n')
+    : 'None';
 
-Yvette's preferences:
-${memberSummary}${ratedSummary}
+  const systemPrompt = `You are a personal meal planning assistant for Yvette, a 6-year-old Singaporean girl living in Singapore.
+You are chatting with her parent (dad) to help plan her meals.
 
-Rules:
-- Only suggest meals that align with her known likes and favourite foods/cuisines
-- Avoid her dislikes (${childDislikeNotes || 'none listed'}) in most suggestions
-- Occasionally (1 in 4) you may sneak a disliked ingredient in a hidden/mild way to broaden her palate — flag it for the parent
-- Meals must be suitable for a 6-year-old: simple, not too spicy, easy to eat
-- If you don't have enough preference data yet, ask the parent what Yvette enjoys before suggesting
+Your knowledge about Yvette:
+- Age: 6 years old, Singaporean, based in Singapore
+- Favourite cuisines: ${cuisines}
+- Foods she specifically likes: ${likes}
+- Foods she dislikes: ${dislikes}
+- Dietary restrictions: ${dietary}
+- Recipes she has loved (thumbs up):
+${lovedRecipes}
+- Recipes she has disliked (thumbs down):
+${dislikedRecipes}
 
-Format: numbered list, each with meal name, cuisine type, and one sentence on why Yvette will enjoy it.`;
+How to behave:
+1. Ground your suggestions in Singapore food culture — hawker dishes, local favourites, kopitiam staples, and regional Southeast Asian food she would encounter in Singapore
+2. Cross-reference the full conversation history — if the parent mentioned something earlier (e.g. "she liked the chicken rice last week"), factor that in
+3. Use her saved recipes and ratings to learn her taste — if she loves wanton mee, suggest similar noodle dishes
+4. Avoid her dislikes in most suggestions; occasionally (1 in 4) include a disliked ingredient hidden in a mild way to gently expand her palate — flag it clearly for the parent
+5. Keep meals practical: available in Singapore, suitable for a 6-year-old, not too spicy
+6. If you need more context to make a good suggestion, ask the parent a focused question
+
+Format: numbered list — meal name, cuisine type, one sentence on why Yvette will enjoy it.`;
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
