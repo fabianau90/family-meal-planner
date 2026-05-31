@@ -4,6 +4,18 @@ import { api } from '../lib/api';
 import { useFamily } from '../context/FamilyContext';
 import WebViewer from '../components/WebViewer';
 
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const MEALS = ['breakfast', 'lunch', 'dinner'];
+const MEAL_EMOJI = { breakfast: '🌅', lunch: '☀️', dinner: '🌙' };
+
+function getMondayOf(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  return d.toISOString().split('T')[0];
+}
+
 export default function Recipes() {
   const navigate = useNavigate();
   const { activeMember } = useFamily();
@@ -16,6 +28,11 @@ export default function Recipes() {
   const [scanning, setScanning] = useState(false);
   const [scanPreview, setScanPreview] = useState(null);
   const [scanned, setScanned] = useState(null);
+  const [addingToPlanner, setAddingToPlanner] = useState(null); // recipe being added
+  const [plannerDay, setPlannerDay] = useState(0);
+  const [plannerMeal, setPlannerMeal] = useState('dinner');
+  const [plannerSaving, setPlannerSaving] = useState(false);
+  const [plannerDone, setPlannerDone] = useState(false);
   const fileRef = useRef(null);
   const searchTimeout = useRef(null);
 
@@ -74,6 +91,26 @@ export default function Recipes() {
       }
     };
     reader.readAsDataURL(file);
+  }
+
+  async function addToPlanner() {
+    if (!addingToPlanner) return;
+    setPlannerSaving(true);
+    try {
+      await api.setMealSlot({
+        week_start: getMondayOf(new Date()),
+        day_index: plannerDay,
+        meal_type: plannerMeal,
+        recipe_id: addingToPlanner._id || addingToPlanner.id,
+      });
+      setPlannerDone(true);
+      setTimeout(() => {
+        setAddingToPlanner(null);
+        setPlannerDone(false);
+      }, 1200);
+    } finally {
+      setPlannerSaving(false);
+    }
   }
 
   async function saveScanned() {
@@ -165,6 +202,7 @@ export default function Recipes() {
                     onRate={handleRate}
                     onEdit={() => navigate(`/recipes/${r._id || r.id}/edit`)}
                     onView={() => r.source_url && setViewerUrl(r.source_url)}
+                    onAddToPlanner={() => { setAddingToPlanner(r); setPlannerDay(0); setPlannerMeal('dinner'); }}
                   />
                 ))}
               </div>
@@ -193,7 +231,14 @@ export default function Recipes() {
             </div>
           )}
 
-          {displayRecipes.length === 0 && webResults.length === 0 && (
+          {displayRecipes.length === 0 && webResults.length === 0 && !search && (
+            <div className="text-center py-16">
+              <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">📖</div>
+              <p className="font-semibold text-stone-700 mb-1">No recipes yet</p>
+              <p className="text-stone-400 text-sm">Add your first recipe or scan a photo!</p>
+            </div>
+          )}
+          {displayRecipes.length === 0 && webResults.length === 0 && search && (
             <div className="text-center py-16">
               <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">📖</div>
               <p className="font-semibold text-stone-700 mb-1">{search ? 'No results found' : 'No recipes yet'}</p>
@@ -202,11 +247,53 @@ export default function Recipes() {
           )}
         </>
       )}
+
+      {/* Add to planner modal */}
+      {addingToPlanner && (
+        <div className="fixed inset-0 bg-black/50 z-20 flex items-end" onClick={() => setAddingToPlanner(null)}>
+          <div className="bg-white w-full rounded-t-3xl p-5 shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <p className="text-xs text-stone-400 font-medium">Adding to this week</p>
+                <p className="font-bold text-stone-800 leading-snug">{addingToPlanner.title}</p>
+              </div>
+              <button onClick={() => setAddingToPlanner(null)} className="w-8 h-8 bg-stone-100 rounded-xl flex items-center justify-center text-stone-400">×</button>
+            </div>
+
+            {/* Day picker */}
+            <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-2">Day</p>
+            <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
+              {DAYS.map((day, i) => (
+                <button key={day} onClick={() => setPlannerDay(i)}
+                  className={`flex-shrink-0 px-3 py-2 rounded-xl text-sm font-semibold transition-all ${plannerDay === i ? 'bg-orange-500 text-white shadow-sm' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}>
+                  {day}
+                </button>
+              ))}
+            </div>
+
+            {/* Meal type picker */}
+            <p className="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-2">Meal</p>
+            <div className="flex gap-2 mb-5">
+              {MEALS.map(meal => (
+                <button key={meal} onClick={() => setPlannerMeal(meal)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${plannerMeal === meal ? 'bg-orange-500 text-white shadow-sm' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}>
+                  {MEAL_EMOJI[meal]} {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            <button onClick={addToPlanner} disabled={plannerSaving || plannerDone}
+              className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-400 text-white font-bold rounded-2xl shadow-sm shadow-orange-200 hover:shadow-md disabled:opacity-70 transition-all">
+              {plannerDone ? '✓ Added to planner!' : plannerSaving ? 'Saving...' : `Add to ${DAYS[plannerDay]} ${plannerMeal}`}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function RecipeCard({ recipe: r, onRate, onEdit, onView }) {
+function RecipeCard({ recipe: r, onRate, onEdit, onView, onAddToPlanner }) {
   return (
     <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-3">
@@ -222,7 +309,11 @@ function RecipeCard({ recipe: r, onRate, onEdit, onView }) {
           <button onClick={() => onRate(r._id || r.id, -1)} className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center hover:bg-red-100 transition-colors">👎</button>
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
+        <button onClick={onAddToPlanner}
+          className="text-xs text-white bg-orange-500 px-3 py-1.5 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+          📅 Add to planner
+        </button>
         <button onClick={onEdit} className="text-xs text-stone-500 bg-stone-100 px-3 py-1.5 rounded-lg font-medium hover:bg-stone-200 transition-colors">Edit</button>
         {r.source_url && (
           <button onClick={onView} className="text-xs text-orange-500 bg-orange-50 px-3 py-1.5 rounded-lg font-medium hover:bg-orange-100 transition-colors">View source</button>
