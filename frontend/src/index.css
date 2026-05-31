@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    margin: 0;
+    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    background-color: #fff7ed;
+    color: #1c1917;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100svh;
+  }
+}
