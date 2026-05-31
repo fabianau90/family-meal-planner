@@ -10,12 +10,18 @@ import shoppingRoutes from './routes/shopping.js';
 
 const app = express();
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  process.env.FRONTEND_URL,
-].filter(Boolean);
-
-app.use(cors({ origin: allowedOrigins }));
+app.use(cors({
+  origin: (origin, callback) => {
+    const allowed = [
+      'http://localhost:5173',
+      process.env.FRONTEND_URL,
+    ].filter(Boolean);
+    // Allow requests with no origin (Vercel serverless, curl, etc.)
+    if (!origin || allowed.includes(origin)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 app.use('/api/family', familyRoutes);
