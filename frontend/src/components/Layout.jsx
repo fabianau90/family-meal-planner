@@ -11,13 +11,12 @@ const NAV = [
 
 export default function Layout() {
   const location = useLocation();
-
   const pageTitle = NAV.find(n => n.end ? location.pathname === n.to : location.pathname.startsWith(n.to))?.label || '';
 
   return (
-    <div className="flex flex-col min-h-screen max-w-md mx-auto bg-white/90 backdrop-blur-sm shadow-xl shadow-orange-100/50">
+    <div className="flex flex-col h-svh max-w-md mx-auto bg-white shadow-xl shadow-orange-100/50">
       {/* Top bar */}
-      <header className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-orange-100 px-5 py-4 flex items-center gap-3">
+      <header className="flex-shrink-0 bg-white/95 backdrop-blur border-b border-orange-100 px-5 py-4 flex items-center gap-3 z-10">
         <div className="flex-1">
           <p className="text-xs font-semibold text-orange-400 uppercase tracking-widest leading-none mb-0.5">Tao Kah Chiu</p>
           <h1 className="text-lg font-bold text-stone-800 leading-none">{pageTitle}</h1>
@@ -27,14 +26,14 @@ export default function Layout() {
         </div>
       </header>
 
-      {/* Page content */}
-      <main className="flex-1 overflow-y-auto pb-24">
+      {/* Scrollable page content */}
+      <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
 
-      {/* Bottom nav */}
-      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-10">
-        <div className="mx-3 mb-3 bg-white rounded-2xl shadow-lg shadow-stone-200/80 border border-stone-100 flex justify-around items-center px-2 py-2">
+      {/* Bottom nav — always visible, never scrolls away */}
+      <nav className="flex-shrink-0 bg-white border-t border-stone-100 z-10">
+        <div className="mx-3 my-2 bg-white rounded-2xl shadow-lg shadow-stone-200/60 border border-stone-100 flex justify-around items-center px-2 py-2">
           {NAV.map(({ to, label, emoji, end }) => (
             <NavLink
               key={to}
