@@ -13,7 +13,7 @@ export default function Layout() {
       {/* Top bar */}
       <header className="sticky top-0 z-10 bg-white border-b border-stone-100 px-4 py-3 flex items-center justify-between">
         <button onClick={() => navigate('/')} className="text-xl font-bold text-orange-500 tracking-tight">
-          🍽 FamilyEats
+          🍽 Tao Kah Chiu
         </button>
         {activeProfile && (
           <button
