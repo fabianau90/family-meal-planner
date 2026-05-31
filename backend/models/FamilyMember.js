@@ -8,6 +8,6 @@ const schema = new mongoose.Schema({
   dietary_restrictions: [String],
   dislikes: [String],
   likes: [String],
-}, { timestamps: true });
+}, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 
 export default mongoose.model('FamilyMember', schema);

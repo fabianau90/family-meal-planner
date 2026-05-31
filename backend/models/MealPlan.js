@@ -5,7 +5,7 @@ const schema = new mongoose.Schema({
   day_index: { type: Number, required: true, min: 0, max: 6 },
   meal_type: { type: String, required: true, enum: ['breakfast', 'lunch', 'dinner'] },
   recipe_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Recipe', default: null },
-}, { timestamps: true });
+}, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 
 schema.index({ week_start: 1, day_index: 1, meal_type: 1 }, { unique: true });
 

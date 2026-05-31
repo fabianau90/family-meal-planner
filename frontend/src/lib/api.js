@@ -21,6 +21,7 @@ export const api = {
 
   // Recipes
   getRecipes: (params = {}) => request(`/recipes?${new URLSearchParams(params)}`),
+  scanRecipe: (body) => request('/recipes/scan', { method: 'POST', body }),
   createRecipe: (body) => request('/recipes', { method: 'POST', body }),
   getRecipe: (id) => request(`/recipes/${id}`),
   updateRecipe: (id, body) => request(`/recipes/${id}`, { method: 'PUT', body }),

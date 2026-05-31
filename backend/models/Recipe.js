@@ -9,6 +9,6 @@ const schema = new mongoose.Schema({
   image_url: String,
   source_url: String,
   added_by: { type: mongoose.Schema.Types.ObjectId, ref: 'FamilyMember' },
-}, { timestamps: true });
+}, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 
 export default mongoose.model('Recipe', schema);
