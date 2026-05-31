@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 @layer base {
-  body {
+  html, body {
     margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
     font-family: system-ui, 'Segoe UI', sans-serif;
     background-color: #fef9f0;
     color: #1c1917;
@@ -10,7 +13,6 @@
   }
 
   #root {
-    width: 100%;
-    min-height: 100svh;
+    height: 100%;
   }
 }
