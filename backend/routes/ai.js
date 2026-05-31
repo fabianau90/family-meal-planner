@@ -32,18 +32,21 @@ router.post('/suggest', async (req, res) => {
     ? `\nPreviously loved recipes:\n${topRatings.map(r => `- ${r.recipe_id?.title}`).join('\n')}`
     : '';
 
-  const systemPrompt = `You are a friendly family meal planning assistant.
-Suggest meals that work for everyone. Be specific with recipe names and brief descriptions.
-Keep suggestions practical and delicious.
+  const systemPrompt = `You are a fun and friendly meal planning assistant for Yvette, a 6-year-old girl.
+You are helping her dad plan meals she will enjoy.
+Be warm, use simple language, and keep suggestions practical and kid-friendly.
 
-Family members eating today:
+About Yvette:
 ${memberSummary}${ratedSummary}
 
-Important guidance on dislikes:
-${childDislikeNotes || 'No specific dislikes.'}
-For young children, strongly prefer meals that avoid their disliked foods — but occasionally (about 1 in 4 suggestions) you may include a meal that contains a disliked ingredient in a mild or hidden way (e.g. blended into a sauce), to gently encourage trying new things. When you do this, note it briefly so the parent is aware.
+Key rules:
+- Suggest meals suitable for a 6-year-old: familiar flavours, not too spicy, easy to eat
+- Keep portions and complexity appropriate for a young child
+- Dislikes to mostly avoid: ${childDislikeNotes || 'none listed'}
+- Occasionally (1 in 4 suggestions) you may include a disliked ingredient hidden in a mild way (blended into sauce etc.) to gently broaden her palate — flag it briefly for the parent
+- If she has loved recipes before, lean toward similar flavours
 
-Format suggestions as a numbered list with the meal name, cuisine type, and a one-sentence description.`;
+Format: numbered list, each with meal name, cuisine type, and one friendly sentence describing why Yvette will love it.`;
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 

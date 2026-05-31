@@ -74,23 +74,25 @@ export default function Dislikes() {
             </div>
           )}
 
-          <form onSubmit={addDislike} className="flex gap-2">
-            <input
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder="e.g. mushrooms, spicy food..."
-              className="flex-1 bg-stone-50 border border-stone-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:bg-white transition-colors"
-              autoFocus
-            />
-            <button
-              type="submit"
-              disabled={!input.trim() || saving}
-              className="bg-gradient-to-r from-orange-500 to-red-400 text-white px-5 py-3 rounded-2xl font-semibold hover:shadow-md disabled:opacity-40 transition-all active:scale-95 shadow-sm shadow-orange-200"
-            >
-              {saved ? '✓' : 'Add'}
-            </button>
-          </form>
-          <p className="text-xs text-stone-400 mt-2 text-center">Tap any tag above to remove it</p>
+          <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm">
+            <p className="text-sm font-semibold text-stone-700 mb-3">Add a food Yvette dislikes</p>
+            <form onSubmit={addDislike} className="flex gap-2">
+              <input
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder="e.g. mushrooms, spicy food..."
+                className="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:bg-white transition-colors"
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || saving}
+                className="bg-gradient-to-r from-orange-500 to-red-400 text-white px-5 py-3 rounded-xl font-semibold hover:shadow-md disabled:opacity-40 transition-all active:scale-95 shadow-sm shadow-orange-200 whitespace-nowrap"
+              >
+                {saved ? '✓ Added' : '+ Add'}
+              </button>
+            </form>
+            <p className="text-xs text-stone-400 mt-2">Tap any tag above to remove it</p>
+          </div>
         </>
       )}
     </div>
