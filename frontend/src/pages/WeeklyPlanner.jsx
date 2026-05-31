@@ -93,8 +93,8 @@ export default function WeeklyPlanner() {
                       <span className="text-lg w-6 text-center flex-shrink-0">{MEAL_EMOJI[meal]}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-stone-400 font-medium mb-0.5">{MEAL_LABEL[meal]}</p>
-                        {slot?.recipes
-                          ? <p className="text-sm font-semibold text-stone-800 truncate">{slot.recipes.title}</p>
+                        {slot?.recipe_id
+                          ? <p className="text-sm font-semibold text-stone-800 truncate">{slot.recipe_id.title}</p>
                           : <p className="text-sm text-stone-300">Not planned</p>
                         }
                       </div>
