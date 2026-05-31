@@ -22,10 +22,10 @@ router.get('/:id', async (req, res) => {
 });
 
 router.put('/:id', async (req, res) => {
-  const { name, avatar_color, cuisines, dietary_restrictions, dislikes } = req.body;
+  const { name, avatar_color, avatar_url, cuisines, dietary_restrictions, dislikes } = req.body;
   const member = await FamilyMember.findByIdAndUpdate(
     req.params.id,
-    { name, avatar_color, cuisines, dietary_restrictions, dislikes },
+    { name, avatar_color, avatar_url, cuisines, dietary_restrictions, dislikes },
     { new: true, runValidators: true }
   );
   if (!member) return res.status(404).json({ error: 'Member not found' });

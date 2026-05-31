@@ -1,13 +1,20 @@
 import { useNavigate } from 'react-router-dom';
 import { useFamily } from '../context/FamilyContext';
+import { api } from '../lib/api';
+import Avatar from '../components/Avatar';
 
 export default function Home() {
-  const { members, loading, selectMember } = useFamily();
+  const { members, loading, selectMember, refreshMembers } = useFamily();
   const navigate = useNavigate();
 
   function handleSelect(member) {
     selectMember(member.id);
     navigate('/suggest');
+  }
+
+  async function handleUpload(member, base64) {
+    await api.updateMember(member.id, { ...member, avatar_url: base64 });
+    await refreshMembers();
   }
 
   return (
@@ -24,21 +31,20 @@ export default function Home() {
       ) : (
         <div className="flex justify-center">
           {members.map(member => (
-            <button
-              key={member.id}
-              onClick={() => handleSelect(member)}
-              className="flex flex-col items-center gap-3 bg-white border-2 border-stone-100 rounded-2xl p-8 hover:border-orange-300 hover:shadow-md transition-all active:scale-95"
-            >
-              <div
-                className="w-24 h-24 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-sm"
-                style={{ backgroundColor: member.avatar_color }}
+            <div key={member.id} className="flex flex-col items-center gap-3">
+              <Avatar
+                member={member}
+                size="lg"
+                editable
+                onUpload={(base64) => handleUpload(member, base64)}
+              />
+              <button
+                onClick={() => handleSelect(member)}
+                className="bg-white border-2 border-stone-100 rounded-2xl px-8 py-3 hover:border-orange-300 hover:shadow-md transition-all active:scale-95"
               >
-                {member.name[0].toUpperCase()}
-              </div>
-              <span className="font-semibold text-stone-700 text-lg text-center leading-tight">
-                {member.name}
-              </span>
-            </button>
+                <span className="font-semibold text-stone-700 text-lg">{member.name}</span>
+              </button>
+            </div>
           ))}
         </div>
       )}
