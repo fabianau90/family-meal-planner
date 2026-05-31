@@ -2,13 +2,75 @@ import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { useFamily } from '../context/FamilyContext';
 
-export default function Dislikes() {
+function TagSection({ title, color, tags, placeholder, onAdd, onRemove }) {
+  const [input, setInput] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  async function handleAdd(e) {
+    e.preventDefault();
+    const val = input.trim();
+    if (!val) return;
+    setInput('');
+    await onAdd(val);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1200);
+  }
+
+  const colors = {
+    green: {
+      banner: 'from-green-400 to-emerald-400',
+      tag: 'bg-green-50 border-green-100 text-green-700 hover:bg-green-100',
+      btn: 'from-green-500 to-emerald-400 shadow-green-200',
+      ring: 'focus:ring-green-300',
+    },
+    red: {
+      banner: 'from-red-400 to-orange-400',
+      tag: 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100',
+      btn: 'from-red-500 to-orange-400 shadow-red-200',
+      ring: 'focus:ring-red-300',
+    },
+  }[color];
+
+  return (
+    <div className="mb-6">
+      <div className={`bg-gradient-to-r ${colors.banner} rounded-2xl px-4 py-3 mb-4`}>
+        <p className="text-white font-bold text-sm">{title}</p>
+      </div>
+
+      {tags.length > 0 ? (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {tags.map(t => (
+            <button key={t} onClick={() => onRemove(t)}
+              className={`flex items-center gap-1.5 border px-3 py-2 rounded-full text-sm font-medium active:scale-95 transition-all shadow-sm ${colors.tag}`}>
+              {t}
+              <span className="opacity-50 font-bold leading-none">×</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className="text-stone-400 text-sm mb-4">Nothing added yet — type below to add.</p>
+      )}
+
+      <form onSubmit={handleAdd} className="flex gap-2">
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder={placeholder}
+          className={`flex-1 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 ${colors.ring} focus:bg-white transition-colors`}
+        />
+        <button type="submit" disabled={!input.trim()}
+          className={`bg-gradient-to-r ${colors.btn} text-white px-5 py-3 rounded-xl font-semibold disabled:opacity-40 transition-all active:scale-95 shadow-sm whitespace-nowrap`}>
+          {saved ? '✓' : '+ Add'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+export default function Preferences() {
   const { members, refreshMembers } = useFamily();
   const [selected, setSelected] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [input, setInput] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (members.length >= 1) setSelected(members[0].id);
@@ -19,80 +81,49 @@ export default function Dislikes() {
     api.getMember(selected).then(setProfile);
   }, [selected]);
 
-  async function addDislike(e) {
-    e.preventDefault();
-    const val = input.trim();
-    if (!val || !profile) return;
-    if (profile.dislikes?.includes(val)) { setInput(''); return; }
-    const updated = { ...profile, dislikes: [...(profile.dislikes || []), val] };
-    setProfile(updated);
-    setInput('');
-    setSaving(true);
-    try {
-      await api.updateMember(selected, updated);
-      await refreshMembers();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 1500);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function removeDislike(val) {
-    const updated = { ...profile, dislikes: profile.dislikes.filter(d => d !== val) };
+  async function updateField(field, newList) {
+    const updated = { ...profile, [field]: newList };
     setProfile(updated);
     await api.updateMember(selected, updated);
     await refreshMembers();
   }
 
+  async function addTo(field, val) {
+    if (!profile || profile[field]?.includes(val)) return;
+    await updateField(field, [...(profile[field] || []), val]);
+  }
+
+  async function removeFrom(field, val) {
+    if (!profile) return;
+    await updateField(field, (profile[field] || []).filter(v => v !== val));
+  }
+
   return (
     <div className="px-4 py-6">
-      {/* Header banner */}
-      <div className="bg-gradient-to-br from-red-400 to-orange-400 rounded-2xl p-5 mb-6 shadow-sm shadow-red-100">
-        <p className="text-red-100 text-xs font-medium mb-1">Personalising Yvette's meals</p>
-        <p className="text-white font-bold text-lg">Foods to avoid</p>
-        <p className="text-red-100 text-sm mt-1">AI will mostly avoid these, but occasionally sneak one in to encourage trying new things 😄</p>
+      <div className="bg-gradient-to-br from-orange-500 to-red-400 rounded-2xl p-5 mb-6 shadow-sm shadow-orange-200">
+        <p className="text-orange-100 text-xs font-medium mb-1">Personalising AI suggestions</p>
+        <p className="text-white font-bold text-lg">Yvette's Preferences</p>
+        <p className="text-orange-100 text-sm mt-1">The AI uses this to suggest meals she'll love.</p>
       </div>
 
       {profile && (
         <>
-          {profile.dislikes?.length > 0 ? (
-            <div className="flex flex-wrap gap-2 mb-6">
-              {profile.dislikes.map(d => (
-                <button key={d} onClick={() => removeDislike(d)}
-                  className="flex items-center gap-1.5 bg-red-50 border border-red-100 text-red-600 px-3 py-2 rounded-full text-sm font-medium hover:bg-red-100 active:scale-95 transition-all shadow-sm">
-                  {d}
-                  <span className="text-red-300 font-bold leading-none">×</span>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 mb-6">
-              <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3">🍽</div>
-              <p className="text-stone-500 text-sm">No dislikes added yet.</p>
-              <p className="text-stone-400 text-xs mt-1">Add foods below that Yvette doesn't like.</p>
-            </div>
-          )}
-
-          <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm">
-            <p className="text-sm font-semibold text-stone-700 mb-3">Add a food Yvette dislikes</p>
-            <form onSubmit={addDislike} className="flex gap-2">
-              <input
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                placeholder="e.g. mushrooms, spicy food..."
-                className="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:bg-white transition-colors"
-              />
-              <button
-                type="submit"
-                disabled={!input.trim() || saving}
-                className="bg-gradient-to-r from-orange-500 to-red-400 text-white px-5 py-3 rounded-xl font-semibold hover:shadow-md disabled:opacity-40 transition-all active:scale-95 shadow-sm shadow-orange-200 whitespace-nowrap"
-              >
-                {saved ? '✓ Added' : '+ Add'}
-              </button>
-            </form>
-            <p className="text-xs text-stone-400 mt-2">Tap any tag above to remove it</p>
-          </div>
+          <TagSection
+            title="✅ Foods & cuisines she likes"
+            color="green"
+            tags={[...(profile.likes || [])]}
+            placeholder="e.g. pasta, fried chicken, Japanese..."
+            onAdd={val => addTo('likes', val)}
+            onRemove={val => removeFrom('likes', val)}
+          />
+          <TagSection
+            title="🚫 Foods she dislikes"
+            color="red"
+            tags={profile.dislikes || []}
+            placeholder="e.g. mushrooms, spicy food, coriander..."
+            onAdd={val => addTo('dislikes', val)}
+            onRemove={val => removeFrom('dislikes', val)}
+          />
         </>
       )}
     </div>

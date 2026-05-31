@@ -7,6 +7,7 @@ const schema = new mongoose.Schema({
   cuisines: [String],
   dietary_restrictions: [String],
   dislikes: [String],
+  likes: [String],
 }, { timestamps: true });
 
 export default mongoose.model('FamilyMember', schema);

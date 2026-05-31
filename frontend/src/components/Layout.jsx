@@ -6,7 +6,7 @@ const NAV = [
   { to: '/recipes', label: 'Recipes', emoji: '📖' },
   { to: '/planner', label: 'Planner', emoji: '📅' },
   { to: '/shopping', label: 'Shop', emoji: '🛒' },
-  { to: '/dislikes', label: 'Dislikes', emoji: '🚫' },
+  { to: '/dislikes', label: 'Prefs', emoji: '⭐' },
 ];
 
 export default function Layout() {

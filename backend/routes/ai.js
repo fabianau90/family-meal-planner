@@ -15,38 +15,36 @@ router.post('/suggest', async (req, res) => {
     .limit(10);
 
   const memberSummary = members.map(m => {
-    const dislikes = (m.dislikes || []).join(', ');
-    const age = m.age ? `age ${m.age}` : '';
-    return `- ${m.name}${age ? ` (${age})` : ''}: likes ${(m.cuisines || []).join(', ') || 'anything'}, ` +
-      `dietary: ${(m.dietary_restrictions || []).join(', ') || 'none'}, ` +
-      `dislikes: ${dislikes || 'none'}`;
+    return `- ${m.name} (age 6):
+    • Favourite foods/cuisines: ${[...(m.cuisines || []), ...(m.likes || [])].join(', ') || 'not specified'}
+    • Dietary restrictions: ${(m.dietary_restrictions || []).join(', ') || 'none'}
+    • Foods she loves: ${(m.likes || []).join(', ') || 'not specified'}
+    • Foods she dislikes: ${(m.dislikes || []).join(', ') || 'none'}`;
   }).join('\n');
 
-  // Build per-member dislike guidance for young children
   const childDislikeNotes = members
     .filter(m => m.dislikes?.length)
-    .map(m => `${m.name} dislikes: ${m.dislikes.join(', ')}`)
-    .join('\n');
+    .map(m => m.dislikes.join(', '))
+    .join(', ');
 
   const ratedSummary = topRatings.length
     ? `\nPreviously loved recipes:\n${topRatings.map(r => `- ${r.recipe_id?.title}`).join('\n')}`
     : '';
 
-  const systemPrompt = `You are a fun and friendly meal planning assistant for Yvette, a 6-year-old girl.
-You are helping her dad plan meals she will enjoy.
-Be warm, use simple language, and keep suggestions practical and kid-friendly.
+  const systemPrompt = `You are a meal planning assistant helping a parent plan meals for their 6-year-old daughter Yvette.
+Your suggestions must be based ONLY on what you know about Yvette's preferences below — do not suggest random internet recipes without context.
 
-About Yvette:
+Yvette's preferences:
 ${memberSummary}${ratedSummary}
 
-Key rules:
-- Suggest meals suitable for a 6-year-old: familiar flavours, not too spicy, easy to eat
-- Keep portions and complexity appropriate for a young child
-- Dislikes to mostly avoid: ${childDislikeNotes || 'none listed'}
-- Occasionally (1 in 4 suggestions) you may include a disliked ingredient hidden in a mild way (blended into sauce etc.) to gently broaden her palate — flag it briefly for the parent
-- If she has loved recipes before, lean toward similar flavours
+Rules:
+- Only suggest meals that align with her known likes and favourite foods/cuisines
+- Avoid her dislikes (${childDislikeNotes || 'none listed'}) in most suggestions
+- Occasionally (1 in 4) you may sneak a disliked ingredient in a hidden/mild way to broaden her palate — flag it for the parent
+- Meals must be suitable for a 6-year-old: simple, not too spicy, easy to eat
+- If you don't have enough preference data yet, ask the parent what Yvette enjoys before suggesting
 
-Format: numbered list, each with meal name, cuisine type, and one friendly sentence describing why Yvette will love it.`;
+Format: numbered list, each with meal name, cuisine type, and one sentence on why Yvette will enjoy it.`;
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
