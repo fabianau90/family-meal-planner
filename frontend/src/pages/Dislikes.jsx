@@ -50,21 +50,6 @@ export default function Dislikes() {
       <h1 className="text-2xl font-bold text-stone-800 mb-1">Food Dislikes</h1>
       <p className="text-stone-500 text-sm mb-6">The AI will avoid these when suggesting meals.</p>
 
-      {/* Member picker (if more than one) */}
-      {members.length > 1 && (
-        <div className="flex gap-2 flex-wrap mb-6">
-          {members.map(m => (
-            <button key={m.id} onClick={() => setSelected(m.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-all ${selected === m.id ? 'text-white border-transparent' : 'bg-white text-stone-600 border-stone-200'}`}
-              style={selected === m.id ? { backgroundColor: m.avatar_color } : {}}>
-              <span className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                style={{ backgroundColor: m.avatar_color }}>{m.name[0]}</span>
-              {m.name}
-            </button>
-          ))}
-        </div>
-      )}
-
       {profile && (
         <>
           {/* Current dislikes */}

@@ -1,9 +1,6 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { useFamily } from '../context/FamilyContext';
+import { Outlet, NavLink } from 'react-router-dom';
 
 export default function Layout() {
-  const { activeProfile, clearMember } = useFamily();
-  const navigate = useNavigate();
 
   const navItem = 'flex flex-col items-center gap-0.5 text-xs font-medium text-stone-500 hover:text-orange-500 transition-colors';
   const activeClass = 'text-orange-500';
@@ -15,20 +12,6 @@ export default function Layout() {
         <button onClick={() => navigate('/')} className="text-xl font-bold text-orange-500 tracking-tight">
           🍽 Tao Kah Chiu
         </button>
-        {activeProfile && (
-          <button
-            onClick={() => { clearMember(); navigate('/'); }}
-            className="flex items-center gap-2 text-sm text-stone-600 bg-stone-100 px-3 py-1.5 rounded-full hover:bg-stone-200 transition-colors"
-          >
-            <span
-              className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
-              style={{ backgroundColor: activeProfile.avatar_color }}
-            >
-              {activeProfile.name[0].toUpperCase()}
-            </span>
-            {activeProfile.name}
-          </button>
-        )}
       </header>
 
       {/* Page content */}
