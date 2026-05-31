@@ -1,0 +1,12 @@
+{
+  "name": "Tao Kah Chiu",
+  "short_name": "TKH",
+  "description": "Yvette's meal planner",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fef9f0",
+  "theme_color": "#f97316",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
