@@ -3,8 +3,8 @@
 @layer base {
   body {
     margin: 0;
-    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-    background-color: #fff7ed;
+    font-family: system-ui, 'Segoe UI', sans-serif;
+    background-color: #fef9f0;
     color: #1c1917;
     -webkit-font-smoothing: antialiased;
   }

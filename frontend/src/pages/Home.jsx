@@ -18,10 +18,12 @@ export default function Home() {
   }
 
   return (
-    <div className="px-4 py-6">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-stone-800 mb-1">Hi Yvette!</h1>
-        <p className="text-stone-500">Tap your name to get meal ideas</p>
+    <div className="min-h-full flex flex-col items-center justify-center px-6 py-12">
+      {/* Hero */}
+      <div className="w-full rounded-3xl bg-gradient-to-br from-orange-400 via-orange-500 to-red-400 p-8 text-center mb-8 shadow-lg shadow-orange-200">
+        <p className="text-orange-100 text-sm font-medium mb-1">Good to see you</p>
+        <h1 className="text-4xl font-bold text-white mb-1">Hi Yvette! 👋</h1>
+        <p className="text-orange-100 text-sm">What shall we eat today?</p>
       </div>
 
       {loading ? (
@@ -29,23 +31,44 @@ export default function Home() {
           <div className="w-10 h-10 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-6 w-full">
           {members.map(member => (
-            <div key={member.id} className="flex flex-col items-center gap-3">
-              <Avatar
-                member={member}
-                size="lg"
-                editable
-                onUpload={(base64) => handleUpload(member, base64)}
-              />
+            <div key={member.id} className="flex flex-col items-center gap-4">
+              <div className="relative">
+                <Avatar
+                  member={member}
+                  size="lg"
+                  editable
+                  onUpload={(base64) => handleUpload(member, base64)}
+                />
+              </div>
               <button
                 onClick={() => handleSelect(member)}
-                className="bg-white border-2 border-stone-100 rounded-2xl px-8 py-3 hover:border-orange-300 hover:shadow-md transition-all active:scale-95"
+                className="bg-gradient-to-r from-orange-500 to-red-400 text-white font-bold text-lg px-12 py-4 rounded-2xl shadow-lg shadow-orange-200 hover:shadow-xl hover:shadow-orange-300 hover:scale-105 active:scale-95 transition-all"
               >
-                <span className="font-semibold text-stone-700 text-lg">{member.name}</span>
+                Let's eat! 🍴
               </button>
             </div>
           ))}
+
+          {/* Quick links */}
+          <div className="grid grid-cols-2 gap-3 w-full mt-4">
+            {[
+              { emoji: '✨', label: 'Get suggestions', to: '/suggest' },
+              { emoji: '📖', label: 'Browse recipes', to: '/recipes' },
+              { emoji: '📅', label: 'This week', to: '/planner' },
+              { emoji: '🛒', label: 'Shopping list', to: '/shopping' },
+            ].map(({ emoji, label, to }) => (
+              <button
+                key={to}
+                onClick={() => navigate(to)}
+                className="flex items-center gap-3 bg-white border border-stone-100 rounded-2xl px-4 py-3 shadow-sm hover:border-orange-200 hover:shadow-md transition-all active:scale-95"
+              >
+                <span className="text-xl">{emoji}</span>
+                <span className="text-sm font-medium text-stone-700">{label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

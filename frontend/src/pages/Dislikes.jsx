@@ -11,7 +11,7 @@ export default function Dislikes() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (members.length === 1) setSelected(members[0].id);
+    if (members.length >= 1) setSelected(members[0].id);
   }, [members]);
 
   useEffect(() => {
@@ -47,43 +47,50 @@ export default function Dislikes() {
 
   return (
     <div className="px-4 py-6">
-      <h1 className="text-2xl font-bold text-stone-800 mb-1">Food Dislikes</h1>
-      <p className="text-stone-500 text-sm mb-6">The AI will avoid these when suggesting meals.</p>
+      {/* Header banner */}
+      <div className="bg-gradient-to-br from-red-400 to-orange-400 rounded-2xl p-5 mb-6 shadow-sm shadow-red-100">
+        <p className="text-red-100 text-xs font-medium mb-1">Personalising Yvette's meals</p>
+        <p className="text-white font-bold text-lg">Foods to avoid</p>
+        <p className="text-red-100 text-sm mt-1">AI will mostly avoid these, but occasionally sneak one in to encourage trying new things 😄</p>
+      </div>
 
       {profile && (
         <>
-          {/* Current dislikes */}
-          <div className="mb-6">
-            {profile.dislikes?.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {profile.dislikes.map(d => (
-                  <button key={d} onClick={() => removeDislike(d)}
-                    className="flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-700 px-3 py-1.5 rounded-full text-sm hover:bg-red-100 transition-colors">
-                    {d}
-                    <span className="text-red-400 font-bold text-xs">×</span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p className="text-stone-400 text-sm">No dislikes added yet.</p>
-            )}
-          </div>
+          {profile.dislikes?.length > 0 ? (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {profile.dislikes.map(d => (
+                <button key={d} onClick={() => removeDislike(d)}
+                  className="flex items-center gap-1.5 bg-red-50 border border-red-100 text-red-600 px-3 py-2 rounded-full text-sm font-medium hover:bg-red-100 active:scale-95 transition-all shadow-sm">
+                  {d}
+                  <span className="text-red-300 font-bold leading-none">×</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 mb-6">
+              <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3">🍽</div>
+              <p className="text-stone-500 text-sm">No dislikes added yet.</p>
+              <p className="text-stone-400 text-xs mt-1">Add foods below that Yvette doesn't like.</p>
+            </div>
+          )}
 
-          {/* Add new dislike */}
           <form onSubmit={addDislike} className="flex gap-2">
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder="e.g. mushrooms, coriander, spicy food..."
-              className="flex-1 border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+              placeholder="e.g. mushrooms, spicy food..."
+              className="flex-1 bg-stone-50 border border-stone-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:bg-white transition-colors"
               autoFocus
             />
-            <button type="submit" disabled={!input.trim() || saving}
-              className="bg-orange-500 text-white px-4 py-3 rounded-xl font-medium hover:bg-orange-600 disabled:opacity-40 transition-colors">
+            <button
+              type="submit"
+              disabled={!input.trim() || saving}
+              className="bg-gradient-to-r from-orange-500 to-red-400 text-white px-5 py-3 rounded-2xl font-semibold hover:shadow-md disabled:opacity-40 transition-all active:scale-95 shadow-sm shadow-orange-200"
+            >
               {saved ? '✓' : 'Add'}
             </button>
           </form>
-          <p className="text-xs text-stone-400 mt-2">Tap any item above to remove it.</p>
+          <p className="text-xs text-stone-400 mt-2 text-center">Tap any tag above to remove it</p>
         </>
       )}
     </div>
