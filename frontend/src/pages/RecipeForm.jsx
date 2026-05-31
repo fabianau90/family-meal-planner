@@ -1,17 +1,24 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useFamily } from '../context/FamilyContext';
 
 export default function RecipeForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { activeMember } = useFamily();
   const isEdit = Boolean(id);
+  const prefill = location.state?.prefill;
 
   const [form, setForm] = useState({
-    title: '', description: '', cuisine: '',
-    ingredients: '', instructions: '', image_url: '', source_url: '',
+    title: prefill?.title || '',
+    description: prefill?.description || '',
+    cuisine: prefill?.cuisine || '',
+    ingredients: '',
+    instructions: '',
+    image_url: prefill?.image_url || '',
+    source_url: prefill?.source_url || '',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');

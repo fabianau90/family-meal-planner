@@ -209,23 +209,18 @@ export default function Recipes() {
             </div>
           )}
 
-          {/* Web results */}
+          {/* Web results — same card style as saved recipes */}
           {webResults.length > 0 && (
             <div>
-              <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">From the web</p>
+              {displayRecipes.length > 0 && <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3 mt-6">More results</p>}
               <div className="space-y-3">
                 {webResults.map((r, i) => (
-                  <button key={i} onClick={() => setViewerUrl(r.source_url)}
-                    className="w-full text-left bg-white border border-stone-100 rounded-2xl p-4 shadow-sm hover:border-orange-200 hover:shadow-md transition-all active:scale-[0.99]">
-                    <div className="flex items-start gap-3">
-                      <span className="text-xl mt-0.5">🌐</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-stone-800 text-sm line-clamp-2 leading-snug">{r.title}</p>
-                        {r.description && <p className="text-xs text-stone-400 mt-1 line-clamp-2">{r.description}</p>}
-                        <p className="text-xs text-orange-400 mt-1 font-medium truncate">{r.source_url}</p>
-                      </div>
-                    </div>
-                  </button>
+                  <WebRecipeCard
+                    key={i}
+                    recipe={r}
+                    onView={() => setViewerUrl(r.source_url)}
+                    onSave={() => navigate('/recipes/new', { state: { prefill: r } })}
+                  />
                 ))}
               </div>
             </div>
@@ -289,6 +284,27 @@ export default function Recipes() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function WebRecipeCard({ recipe: r, onView, onSave }) {
+  return (
+    <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+      <div className="mb-3">
+        <p className="font-semibold text-stone-800 leading-snug">{r.title}</p>
+        {r.description && <p className="text-sm text-stone-400 mt-1.5 line-clamp-2">{r.description}</p>}
+      </div>
+      <div className="flex gap-2">
+        <button onClick={onSave}
+          className="text-xs text-white bg-orange-500 px-3 py-1.5 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+          💾 Save recipe
+        </button>
+        <button onClick={onView}
+          className="text-xs text-orange-500 bg-orange-50 px-3 py-1.5 rounded-lg font-medium hover:bg-orange-100 transition-colors">
+          View recipe
+        </button>
+      </div>
     </div>
   );
 }
