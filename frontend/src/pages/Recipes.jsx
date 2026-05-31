@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useFamily } from '../context/FamilyContext';
+import WebViewer from '../components/WebViewer';
 
 export default function Recipes() {
   const navigate = useNavigate();
   const { activeMember } = useFamily();
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [viewerUrl, setViewerUrl] = useState(null);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export default function Recipes() {
 
   return (
     <div className="px-4 py-6">
+      <WebViewer url={viewerUrl} onClose={() => setViewerUrl(null)} />
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-stone-800">Recipes</h1>
         <button onClick={() => navigate('/recipes/new')}
@@ -70,10 +73,10 @@ export default function Recipes() {
                   Edit
                 </button>
                 {r.source_url && (
-                  <a href={r.source_url} target="_blank" rel="noopener noreferrer"
+                  <button onClick={() => setViewerUrl(r.source_url)}
                     className="text-xs text-orange-500 bg-orange-50 px-3 py-1.5 rounded-lg hover:bg-orange-100">
                     View source
-                  </a>
+                  </button>
                 )}
               </div>
             </div>

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { api } from '../lib/api';
 import { useFamily } from '../context/FamilyContext';
+import WebViewer from '../components/WebViewer';
 
 export default function Suggest() {
   const { members, activeMember } = useFamily();
@@ -10,6 +11,7 @@ export default function Suggest() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState('ai'); // 'ai' | 'search'
+  const [viewerUrl, setViewerUrl] = useState(null);
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -106,11 +108,11 @@ export default function Suggest() {
                 {msg.results.length === 0
                   ? <p className="text-sm text-stone-400 text-center">No results found.</p>
                   : msg.results.map((r, j) => (
-                    <a key={j} href={r.url} target="_blank" rel="noopener noreferrer"
-                      className="block bg-white border border-stone-200 rounded-xl p-3 hover:border-orange-300 transition-colors">
+                    <button key={j} onClick={() => setViewerUrl(r.url)}
+                      className="w-full text-left bg-white border border-stone-200 rounded-xl p-3 hover:border-orange-300 transition-colors">
                       <p className="text-sm font-medium text-stone-800 line-clamp-1">{r.title}</p>
                       <p className="text-xs text-stone-400 mt-0.5 line-clamp-2">{r.snippet}</p>
-                    </a>
+                    </button>
                   ))
                 }
               </div>
@@ -142,6 +144,8 @@ export default function Suggest() {
         )}
         <div ref={bottomRef} />
       </div>
+
+      <WebViewer url={viewerUrl} onClose={() => setViewerUrl(null)} />
 
       {/* Single input bar */}
       <div className="px-4 py-3 border-t border-stone-100 bg-white">

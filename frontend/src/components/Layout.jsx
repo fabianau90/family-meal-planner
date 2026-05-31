@@ -58,6 +58,10 @@ export default function Layout() {
           <span className="text-xl">🛒</span>
           Shopping
         </NavLink>
+        <NavLink to="/dislikes" className={({ isActive }) => `${navItem} ${isActive ? activeClass : ''}`}>
+          <span className="text-xl">🚫</span>
+          Dislikes
+        </NavLink>
       </nav>
     </div>
   );
