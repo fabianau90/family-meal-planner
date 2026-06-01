@@ -95,12 +95,15 @@ router.post('/generate-recipe', async (req, res) => {
   if (!title) return res.status(400).json({ error: 'title required' });
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1024,
-    messages: [{
-      role: 'user',
-      content: `Generate a complete home-cooking recipe for "${title}" suitable for a 6-year-old Singaporean child.
+
+  // Run Claude generation and Tavily URL search in parallel
+  const [aiResponse, tavilyUrl] = await Promise.all([
+    client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: `Generate a complete home-cooking recipe for "${title}" suitable for a 6-year-old Singaporean child.
 Return ONLY a valid JSON object, no markdown, no code fences:
 {
   "title": "${title}",
@@ -109,12 +112,26 @@ Return ONLY a valid JSON object, no markdown, no code fences:
   "ingredients": ["ingredient 1 with quantity", "ingredient 2 with quantity"],
   "instructions": "full step-by-step method as a single plain-text string"
 }`,
-    }],
-  });
+      }],
+    }),
+    process.env.TAVILY_API_KEY
+      ? fetch('https://api.tavily.com/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            api_key: process.env.TAVILY_API_KEY,
+            query: `${title} recipe`,
+            search_depth: 'basic',
+            max_results: 1,
+          }),
+        }).then(r => r.ok ? r.json() : null).then(d => d?.results?.[0]?.url || null).catch(() => null)
+      : Promise.resolve(null),
+  ]);
 
   try {
-    const text = response.content[0].text.trim().replace(/^```json?\s*/i, '').replace(/```$/, '');
+    const text = aiResponse.content[0].text.trim().replace(/^```json?\s*/i, '').replace(/```$/, '');
     const parsed = JSON.parse(text);
+    if (tavilyUrl) parsed.source_url = tavilyUrl;
     res.json(parsed);
   } catch {
     res.status(500).json({ error: 'Could not generate recipe' });
