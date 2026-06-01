@@ -5,7 +5,6 @@ const NAV = [
   { to: '/suggest', label: 'Suggest', emoji: '✨' },
   { to: '/recipes', label: 'Recipes', emoji: '📖' },
   { to: '/planner', label: 'Planner', emoji: '📅' },
-  { to: '/shopping', label: 'Shop', emoji: '🛒' },
   { to: '/dislikes', label: 'Prefs', emoji: '⭐' },
 ];
 
