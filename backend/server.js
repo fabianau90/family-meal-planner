@@ -33,7 +33,18 @@ app.use('/api/meal-plan', mealPlanRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/shopping', shoppingRoutes);
 
-app.get('/api/health', (_, res) => res.json({ ok: true }));
+app.get('/api/health', async (_, res) => {
+  try {
+    await connectDB();
+    const [recipes, members] = await Promise.all([
+      (await import('./models/Recipe.js')).default.countDocuments(),
+      (await import('./models/FamilyMember.js')).default.countDocuments(),
+    ]);
+    res.json({ ok: true, db: 'connected', recipes, members });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 // Local dev: listen directly. Vercel: export the app.
 if (process.env.NODE_ENV !== 'production') {
