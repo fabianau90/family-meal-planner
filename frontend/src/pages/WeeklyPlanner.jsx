@@ -28,7 +28,7 @@ export default function WeeklyPlanner() {
         const map = {};
         meals.forEach(m => { map[`${m.day_index}-${m.meal_type}`] = m; });
         setPlan(map);
-        setRecipes(recs);
+        setRecipes(recs.local || []);
       })
       .finally(() => setLoading(false));
   }, [weekStart]);

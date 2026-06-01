@@ -7,7 +7,6 @@ import Suggest from './pages/Suggest';
 import Recipes from './pages/Recipes';
 import RecipeForm from './pages/RecipeForm';
 import WeeklyPlanner from './pages/WeeklyPlanner';
-import ShoppingList from './pages/ShoppingList';
 import Preferences from './pages/Dislikes';
 
 export default function App() {
@@ -23,7 +22,6 @@ export default function App() {
             <Route path="recipes/new" element={<RecipeForm />} />
             <Route path="recipes/:id/edit" element={<RecipeForm />} />
             <Route path="planner" element={<WeeklyPlanner />} />
-            <Route path="shopping" element={<ShoppingList />} />
             <Route path="dislikes" element={<Preferences />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
