@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { connectDB } from './services/db.js';
+import Recipe from './models/Recipe.js';
+import FamilyMember from './models/FamilyMember.js';
 import familyRoutes from './routes/family.js';
 import recipeRoutes from './routes/recipes.js';
 import mealPlanRoutes from './routes/mealPlan.js';
@@ -35,10 +37,9 @@ app.use('/api/shopping', shoppingRoutes);
 
 app.get('/api/health', async (_, res) => {
   try {
-    await connectDB();
     const [recipes, members] = await Promise.all([
-      (await import('./models/Recipe.js')).default.countDocuments(),
-      (await import('./models/FamilyMember.js')).default.countDocuments(),
+      Recipe.countDocuments(),
+      FamilyMember.countDocuments(),
     ]);
     res.json({ ok: true, db: 'connected', recipes, members });
   } catch (err) {
