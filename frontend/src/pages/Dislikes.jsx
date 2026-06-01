@@ -71,14 +71,19 @@ export default function Preferences() {
   const { members, refreshMembers } = useFamily();
   const [selected, setSelected] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
 
   useEffect(() => {
-    if (members.length >= 1) setSelected(members[0].id);
+    if (members.length >= 1) setSelected(members[0].id || members[0]._id);
   }, [members]);
 
   useEffect(() => {
     if (!selected) return;
-    api.getMember(selected).then(setProfile);
+    setLoadingProfile(true);
+    api.getMember(selected)
+      .then(setProfile)
+      .catch(console.error)
+      .finally(() => setLoadingProfile(false));
   }, [selected]);
 
   async function updateField(field, newList) {
@@ -106,7 +111,17 @@ export default function Preferences() {
         <p className="text-orange-100 text-sm mt-1">The AI uses this to suggest meals she'll love.</p>
       </div>
 
-      {profile && (
+      {loadingProfile && (
+        <div className="flex justify-center py-12">
+          <div className="w-8 h-8 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+        </div>
+      )}
+
+      {!loadingProfile && !profile && members.length === 0 && (
+        <p className="text-center text-stone-400 py-10 text-sm">No family profile found. Try refreshing the page.</p>
+      )}
+
+      {!loadingProfile && profile && (
         <>
           <TagSection
             title="✅ Foods & cuisines she likes"
