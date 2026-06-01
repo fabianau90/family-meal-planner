@@ -1,6 +1,18 @@
 import mongoose from 'mongoose';
+import { seedRecipes, seedFamily } from './seed.js';
+
+let ready = null;
 
 export async function connectDB() {
-  await mongoose.connect(process.env.MONGODB_URI);
-  console.log('MongoDB connected');
+  if (!ready) {
+    ready = (async () => {
+      if (mongoose.connection.readyState === 0) {
+        await mongoose.connect(process.env.MONGODB_URI);
+        console.log('MongoDB connected');
+      }
+      await seedRecipes();
+      await seedFamily();
+    })();
+  }
+  await ready;
 }

@@ -2,7 +2,6 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { connectDB } from './services/db.js';
-import { seedRecipes, seedFamily } from './services/seed.js';
 import familyRoutes from './routes/family.js';
 import recipeRoutes from './routes/recipes.js';
 import mealPlanRoutes from './routes/mealPlan.js';
@@ -36,13 +35,11 @@ app.get('/api/health', (_, res) => res.json({ ok: true }));
 // Local dev: listen directly. Vercel: export the app.
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3001;
-  connectDB().then(async () => {
-    await seedRecipes();
-    await seedFamily();
-    app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
-  });
+  connectDB()
+    .then(() => app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`)))
+    .catch(console.error);
 } else {
-  connectDB().then(async () => { await seedRecipes(); await seedFamily(); }).catch(console.error);
+  connectDB().catch(console.error);
 }
 
 export default app;
