@@ -32,24 +32,22 @@ export default function Home() {
         </div>
       ) : (
         <div className="flex flex-col items-center gap-6 w-full">
-          {members.map(member => (
-            <div key={member.id} className="flex flex-col items-center gap-4">
-              <div className="relative">
-                <Avatar
-                  member={member}
-                  size="lg"
-                  editable
-                  onUpload={(base64) => handleUpload(member, base64)}
-                />
-              </div>
+          {members[0] && (
+            <div className="flex flex-col items-center gap-4">
+              <Avatar
+                member={members[0]}
+                size="lg"
+                editable
+                onUpload={(base64) => handleUpload(members[0], base64)}
+              />
               <button
-                onClick={() => handleSelect(member)}
+                onClick={() => handleSelect(members[0])}
                 className="bg-gradient-to-r from-orange-500 to-red-400 text-white font-bold text-lg px-12 py-4 rounded-2xl shadow-lg shadow-orange-200 hover:shadow-xl hover:shadow-orange-300 hover:scale-105 active:scale-95 transition-all"
               >
                 Let's eat! 🍴
               </button>
             </div>
-          ))}
+          )}
 
           {/* Quick links */}
           <div className="grid grid-cols-2 gap-3 w-full mt-4">
@@ -57,7 +55,7 @@ export default function Home() {
               { emoji: '✨', label: 'Get suggestions', to: '/suggest' },
               { emoji: '📖', label: 'Browse recipes', to: '/recipes' },
               { emoji: '📅', label: 'This week', to: '/planner' },
-              { emoji: '🛒', label: 'Shopping list', to: '/shopping' },
+              { emoji: '⭐', label: 'Preferences', to: '/prefs' },
             ].map(({ emoji, label, to }) => (
               <button
                 key={to}
@@ -69,6 +67,22 @@ export default function Home() {
               </button>
             ))}
           </div>
+
+          {/* Other members placeholder */}
+          {members.length > 1 && (
+            <div className="w-full mt-2">
+              <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3 text-center">Other Members</p>
+              <div className="flex flex-wrap justify-center gap-4">
+                {members.slice(1).map(member => (
+                  <div key={member.id} className="flex flex-col items-center gap-2 opacity-40">
+                    <Avatar member={member} size="md" />
+                    <span className="text-xs text-stone-500 font-medium">{member.name}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-center text-xs text-stone-400 mt-3 italic">Feature coming soon</p>
+            </div>
+          )}
         </div>
       )}
     </div>
