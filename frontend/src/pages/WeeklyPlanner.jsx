@@ -150,7 +150,7 @@ export default function WeeklyPlanner() {
                 </div>
                 <div className="px-5 py-4 space-y-4">
                   {viewRecipe.description && <p className="text-stone-500 text-sm leading-relaxed">{viewRecipe.description}</p>}
-                  {viewRecipe.ingredients?.length > 0 && (
+                  {viewRecipe.ingredients?.length > 0 ? (
                     <div>
                       <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Ingredients</p>
                       <ul className="space-y-1">
@@ -161,6 +161,11 @@ export default function WeeklyPlanner() {
                         ))}
                       </ul>
                     </div>
+                  ) : viewRecipe.source_url && (
+                    <a href={viewRecipe.source_url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-orange-500 font-medium bg-orange-50 px-4 py-3 rounded-xl hover:bg-orange-100 transition-colors">
+                      🔗 View full recipe on source website
+                    </a>
                   )}
                   {viewRecipe.instructions && (
                     <div>

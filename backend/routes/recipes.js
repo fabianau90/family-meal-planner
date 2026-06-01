@@ -118,21 +118,19 @@ router.post('/fetch-url', async (req, res) => {
     max_tokens: 2048,
     messages: [{
       role: 'user',
-      content: `You are extracting a recipe from webpage text. Return ONLY a JSON object with no markdown.
+      content: `Extract the recipe from this webpage and return a single valid JSON object. No markdown, no code fences, no extra text — just the JSON.
 
-Rules:
-- "title" must be the RECIPE NAME only (e.g. "Banana Pancakes"), never an article headline or blog post title
-- "ingredients" must be a complete array — include every ingredient listed, do not truncate or use "..."
-- "instructions" must be the full step-by-step method as a single string
-- "cuisine" is the type of cuisine (e.g. "Singaporean", "Western", "Japanese") — leave blank if unknown
-- "description" is one short sentence describing the dish
+Fields required:
+- "title": the recipe name ONLY (e.g. "Honey Chicken Chop") — never use the website name, article headline, or blog post title
+- "description": one plain-text sentence describing the dish, no markdown symbols
+- "cuisine": cuisine type (e.g. "Singaporean", "Western") — empty string if unknown
+- "ingredients": complete array of every ingredient, plain text, no markdown (e.g. ["2 boneless chicken thighs", "3 tbsp honey"])
+- "instructions": full step-by-step method as a single plain-text string, no markdown symbols
 
-If no recipe exists on this page, return: {"error":"No recipe found"}
+If there is no recipe on this page return exactly: {"error":"No recipe found"}
 
 Webpage text:
-${html}
-
-JSON output:`,
+${html}`,
     }],
   });
 
