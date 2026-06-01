@@ -90,6 +90,37 @@ Format: numbered list — meal name (mark saved recipes with "📖"), cuisine ty
   });
 });
 
+router.post('/generate-recipe', async (req, res) => {
+  const { title } = req.body;
+  if (!title) return res.status(400).json({ error: 'title required' });
+
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 1024,
+    messages: [{
+      role: 'user',
+      content: `Generate a complete home-cooking recipe for "${title}" suitable for a 6-year-old Singaporean child.
+Return ONLY a valid JSON object, no markdown, no code fences:
+{
+  "title": "${title}",
+  "description": "one plain-text sentence describing the dish",
+  "cuisine": "cuisine type (e.g. Singaporean, Western)",
+  "ingredients": ["ingredient 1 with quantity", "ingredient 2 with quantity"],
+  "instructions": "full step-by-step method as a single plain-text string"
+}`,
+    }],
+  });
+
+  try {
+    const text = response.content[0].text.trim().replace(/^```json?\s*/i, '').replace(/```$/, '');
+    const parsed = JSON.parse(text);
+    res.json(parsed);
+  } catch {
+    res.status(500).json({ error: 'Could not generate recipe' });
+  }
+});
+
 router.post('/search-recipes', async (req, res) => {
   const { query } = req.body;
   if (!query) return res.status(400).json({ error: 'query required' });

@@ -38,6 +38,7 @@ export const api = {
 
   // AI
   suggestMeals: (body) => request('/ai/suggest', { method: 'POST', body }),
+  generateRecipe: (title) => request('/ai/generate-recipe', { method: 'POST', body: { title } }),
   searchRecipes: (query) => request('/ai/search-recipes', { method: 'POST', body: { query } }),
 
   // Shopping

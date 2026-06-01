@@ -17,6 +17,7 @@ export default function Suggest() {
   const [recipes, setRecipes] = useState([]);
   const [viewRecipe, setViewRecipe] = useState(null);
   const [loadingRecipe, setLoadingRecipe] = useState(false);
+  const [generatingTitle, setGeneratingTitle] = useState(null);
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -54,14 +55,27 @@ export default function Suggest() {
         const rawName = starMatch[1].trim();
         const before = line.slice(0, starMatch.index);
         const after = line.slice(starMatch.index + starMatch[0].length);
+        const isGenerating = generatingTitle === rawName;
         result.push(
           <span key={key++}>{before}⭐ </span>,
-          <button key={key++}
-            onClick={() => navigate('/recipes/new', { state: { prefill: { title: rawName } } })}
-            className="font-semibold text-orange-500 underline underline-offset-2 hover:text-orange-600">
+          <button key={key++} disabled={!!generatingTitle}
+            onClick={async () => {
+              setGeneratingTitle(rawName);
+              try {
+                const recipe = await api.generateRecipe(rawName);
+                navigate('/recipes/new', { state: { prefill: recipe } });
+              } catch {
+                navigate('/recipes/new', { state: { prefill: { title: rawName } } });
+              } finally {
+                setGeneratingTitle(null);
+              }
+            }}
+            className="font-semibold text-orange-500 underline underline-offset-2 hover:text-orange-600 disabled:opacity-50">
             {rawName}
           </button>,
-          <span key={key++} className="text-xs text-stone-400 ml-1">(tap to save)</span>,
+          <span key={key++} className="text-xs text-stone-400 ml-1">
+            {isGenerating ? '⏳ generating...' : '(tap to save)'}
+          </span>,
           <span key={key++}>{after}{'\n'}</span>
         );
         return result;
