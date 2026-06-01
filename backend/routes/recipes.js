@@ -94,6 +94,58 @@ Return only valid JSON, no markdown.`,
   }
 });
 
+// POST fetch a recipe from a URL and extract structured data using Claude
+router.post('/fetch-url', async (req, res) => {
+  const { url } = req.body;
+  if (!url) return res.status(400).json({ error: 'url required' });
+
+  let html = '';
+  try {
+    const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    html = await response.text();
+    html = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+               .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+               .replace(/<[^>]+>/g, ' ')
+               .replace(/\s+/g, ' ')
+               .slice(0, 15000);
+  } catch {
+    return res.status(400).json({ error: 'Could not fetch that URL' });
+  }
+
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const aiResponse = await client.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 2048,
+    messages: [{
+      role: 'user',
+      content: `You are extracting a recipe from webpage text. Return ONLY a JSON object with no markdown.
+
+Rules:
+- "title" must be the RECIPE NAME only (e.g. "Banana Pancakes"), never an article headline or blog post title
+- "ingredients" must be a complete array — include every ingredient listed, do not truncate or use "..."
+- "instructions" must be the full step-by-step method as a single string
+- "cuisine" is the type of cuisine (e.g. "Singaporean", "Western", "Japanese") — leave blank if unknown
+- "description" is one short sentence describing the dish
+
+If no recipe exists on this page, return: {"error":"No recipe found"}
+
+Webpage text:
+${html}
+
+JSON output:`,
+    }],
+  });
+
+  try {
+    const text = aiResponse.content[0].text.trim().replace(/^```json?\s*/i, '').replace(/```$/, '');
+    const parsed = JSON.parse(text);
+    if (parsed.error) return res.status(400).json({ error: parsed.error });
+    res.json({ ...parsed, source_url: url });
+  } catch {
+    res.status(500).json({ error: 'Could not parse recipe from page' });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   const recipe = await Recipe.findById(req.params.id).populate('added_by', 'name avatar_color');
   if (!recipe) return res.status(404).json({ error: 'Recipe not found' });

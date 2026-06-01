@@ -15,8 +15,8 @@ export default function RecipeForm() {
     title: prefill?.title || '',
     description: prefill?.description || '',
     cuisine: prefill?.cuisine || '',
-    ingredients: '',
-    instructions: '',
+    ingredients: Array.isArray(prefill?.ingredients) ? prefill.ingredients.join('\n') : (prefill?.ingredients || ''),
+    instructions: prefill?.instructions || '',
     image_url: prefill?.image_url || '',
     source_url: prefill?.source_url || '',
   });

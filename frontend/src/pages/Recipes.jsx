@@ -219,7 +219,14 @@ export default function Recipes() {
                     key={i}
                     recipe={r}
                     onView={() => setViewerUrl(r.source_url)}
-                    onSave={() => navigate('/recipes/new', { state: { prefill: r } })}
+                    onSave={async () => {
+                      try {
+                        const extracted = await api.fetchRecipeFromUrl(r.source_url);
+                        navigate('/recipes/new', { state: { prefill: extracted } });
+                      } catch {
+                        navigate('/recipes/new', { state: { prefill: r } });
+                      }
+                    }}
                   />
                 ))}
               </div>
@@ -289,6 +296,14 @@ export default function Recipes() {
 }
 
 function WebRecipeCard({ recipe: r, onView, onSave }) {
+  const [extracting, setExtracting] = useState(false);
+
+  async function handleSave() {
+    setExtracting(true);
+    await onSave();
+    setExtracting(false);
+  }
+
   return (
     <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
       <div className="mb-3">
@@ -296,9 +311,11 @@ function WebRecipeCard({ recipe: r, onView, onSave }) {
         {r.description && <p className="text-sm text-stone-400 mt-1.5 line-clamp-2">{r.description}</p>}
       </div>
       <div className="flex gap-2">
-        <button onClick={onSave}
-          className="text-xs text-white bg-orange-500 px-3 py-1.5 rounded-lg font-medium hover:bg-orange-600 transition-colors">
-          💾 Save recipe
+        <button onClick={handleSave} disabled={extracting}
+          className="text-xs text-white bg-orange-500 px-3 py-1.5 rounded-lg font-medium hover:bg-orange-600 transition-colors disabled:opacity-60 flex items-center gap-1.5">
+          {extracting
+            ? <><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" /> Extracting...</>
+            : '💾 Save recipe'}
         </button>
         <button onClick={onView}
           className="text-xs text-orange-500 bg-orange-50 px-3 py-1.5 rounded-lg font-medium hover:bg-orange-100 transition-colors">
