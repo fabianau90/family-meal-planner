@@ -21,6 +21,7 @@ export const api = {
 
   // Recipes
   getRecipes: (params = {}) => request(`/recipes?${new URLSearchParams(params)}`),
+  getRatings: (member_id) => request(`/recipes/ratings?member_id=${member_id}`),
   scanRecipe: (body) => request('/recipes/scan', { method: 'POST', body }),
   fetchRecipeFromUrl: (url) => request('/recipes/fetch-url', { method: 'POST', body: { url } }),
   createRecipe: (body) => request('/recipes', { method: 'POST', body }),
@@ -28,6 +29,7 @@ export const api = {
   updateRecipe: (id, body) => request(`/recipes/${id}`, { method: 'PUT', body }),
   deleteRecipe: (id) => request(`/recipes/${id}`, { method: 'DELETE' }),
   rateRecipe: (id, body) => request(`/recipes/${id}/rate`, { method: 'POST', body }),
+  deleteRating: (id, member_id) => request(`/recipes/${id}/rate?member_id=${member_id}`, { method: 'DELETE' }),
 
   // Meal plan
   getMealPlan: (week_start) => request(`/meal-plan?week_start=${week_start}`),

@@ -94,6 +94,16 @@ Return only valid JSON, no markdown.`,
   }
 });
 
+// GET ratings for a member — returns { [recipe_id]: 1 | -1 }
+router.get('/ratings', async (req, res) => {
+  const { member_id } = req.query;
+  if (!member_id) return res.json({});
+  const ratings = await Rating.find({ member_id });
+  const map = {};
+  ratings.forEach(r => { map[r.recipe_id.toString()] = r.rating; });
+  res.json(map);
+});
+
 // POST fetch a recipe from a URL and extract structured data using Claude
 router.post('/fetch-url', async (req, res) => {
   const { url } = req.body;
@@ -178,6 +188,13 @@ router.post('/:id/rate', async (req, res) => {
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
   res.json(doc);
+});
+
+router.delete('/:id/rate', async (req, res) => {
+  const { member_id } = req.query;
+  if (!member_id) return res.status(400).json({ error: 'member_id required' });
+  await Rating.deleteOne({ recipe_id: req.params.id, member_id });
+  res.json({ ok: true });
 });
 
 export default router;

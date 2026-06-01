@@ -28,6 +28,7 @@ export default function Recipes() {
   const [scanning, setScanning] = useState(false);
   const [scanPreview, setScanPreview] = useState(null);
   const [scanned, setScanned] = useState(null);
+  const [ratings, setRatings] = useState({});
   const [addingToPlanner, setAddingToPlanner] = useState(null); // recipe being added
   const [plannerDay, setPlannerDay] = useState(0);
   const [plannerMeal, setPlannerMeal] = useState('dinner');
@@ -42,6 +43,13 @@ export default function Recipes() {
       setRecipes(res.local || res);
     }).finally(() => setLoading(false));
   }, []);
+
+  // Load ratings whenever we know who the active member is
+  useEffect(() => {
+    const memberId = activeMember || members[0]?.id;
+    if (!memberId) return;
+    api.getRatings(memberId).then(setRatings).catch(() => {});
+  }, [activeMember, members]);
 
   // Search with debounce — includes web results when query present
   useEffect(() => {
@@ -64,9 +72,22 @@ export default function Recipes() {
   }, [search]);
 
   async function handleRate(id, rating) {
-    if (!activeMember) return;
-    try { await api.rateRecipe(id, { member_id: activeMember, rating }); }
-    catch (err) { console.error(err); }
+    const memberId = activeMember || members[0]?.id;
+    if (!memberId) return;
+    const prev = ratings[id];
+    // Toggle off if tapping same rating again
+    const newRating = prev === rating ? null : rating;
+    setRatings(r => ({ ...r, [id]: newRating }));
+    try {
+      if (newRating === null) {
+        await api.deleteRating(id, memberId);
+      } else {
+        await api.rateRecipe(id, { member_id: memberId, rating: newRating });
+      }
+    } catch (err) {
+      console.error(err);
+      setRatings(r => ({ ...r, [id]: prev })); // revert on error
+    }
   }
 
   async function handleDelete(id) {
@@ -207,6 +228,7 @@ export default function Recipes() {
                   <RecipeCard
                     key={r._id || r.id}
                     recipe={r}
+                    currentRating={ratings[r._id || r.id] ?? null}
                     onRate={handleRate}
                     onEdit={() => navigate(`/recipes/${r._id || r.id}/edit`)}
                     onView={() => r.source_url && setViewerUrl(r.source_url)}
@@ -335,7 +357,7 @@ function WebRecipeCard({ recipe: r, onView, onSave }) {
   );
 }
 
-function RecipeCard({ recipe: r, onRate, onEdit, onView, onAddToPlanner, onDelete }) {
+function RecipeCard({ recipe: r, currentRating, onRate, onEdit, onView, onAddToPlanner, onDelete }) {
   return (
     <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-3">
@@ -347,8 +369,10 @@ function RecipeCard({ recipe: r, onRate, onEdit, onView, onAddToPlanner, onDelet
           {r.description && <p className="text-sm text-stone-400 mt-1.5 line-clamp-2">{r.description}</p>}
         </div>
         <div className="flex gap-1 flex-shrink-0">
-          <button onClick={() => onRate(r._id || r.id, 1)} className="w-8 h-8 rounded-xl bg-green-50 flex items-center justify-center hover:bg-green-100 transition-colors">👍</button>
-          <button onClick={() => onRate(r._id || r.id, -1)} className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center hover:bg-red-100 transition-colors">👎</button>
+          <button onClick={() => onRate(r._id || r.id, 1)}
+            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${currentRating === 1 ? 'bg-green-200 ring-2 ring-green-400' : 'bg-green-50 hover:bg-green-100'}`}>👍</button>
+          <button onClick={() => onRate(r._id || r.id, -1)}
+            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${currentRating === -1 ? 'bg-red-200 ring-2 ring-red-400' : 'bg-red-50 hover:bg-red-100'}`}>👎</button>
         </div>
       </div>
       <div className="flex gap-2 flex-wrap">
