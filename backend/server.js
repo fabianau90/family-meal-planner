@@ -24,6 +24,9 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Ensure DB is connected and seeded before every request
+app.use((req, res, next) => connectDB().then(next).catch(next));
+
 app.use('/api/family', familyRoutes);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/meal-plan', mealPlanRoutes);
@@ -38,8 +41,6 @@ if (process.env.NODE_ENV !== 'production') {
   connectDB()
     .then(() => app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`)))
     .catch(console.error);
-} else {
-  connectDB().catch(console.error);
 }
 
 export default app;
