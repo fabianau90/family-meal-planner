@@ -4,7 +4,7 @@ import FamilyMember from '../models/FamilyMember.js';
 const PRESET_RECIPES = [
   {
     title: 'Hainanese Chicken Rice',
-    description: 'Singapore's iconic dish — silky poached chicken over fragrant rice with chilli and ginger sauces.',
+    description: "Singapore's iconic dish — silky poached chicken over fragrant rice with chilli and ginger sauces.",
     cuisine: 'Singaporean',
     ingredients: [
       '1 whole chicken', '4 cups jasmine rice', '4 garlic cloves', '3 slices ginger',
