@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import FamilyMember from '../models/FamilyMember.js';
+import { seedFamily } from '../services/seed.js';
 
 const router = Router();
 
 router.get('/', async (req, res) => {
+  await seedFamily(); // Ensure Yvette exists on every member fetch
   const members = await FamilyMember.find().sort('name');
   res.json(members);
 });

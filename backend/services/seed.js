@@ -118,24 +118,32 @@ const PRESET_RECIPES = [
 ];
 
 export async function seedRecipes() {
-  const count = await Recipe.countDocuments();
-  if (count === 0) {
-    await Recipe.insertMany(PRESET_RECIPES);
-    console.log(`Seeded ${PRESET_RECIPES.length} preset recipes.`);
+  try {
+    const count = await Recipe.countDocuments();
+    if (count === 0) {
+      await Recipe.insertMany(PRESET_RECIPES);
+      console.log(`Seeded ${PRESET_RECIPES.length} preset recipes.`);
+    }
+  } catch (err) {
+    console.error('seedRecipes failed:', err.message);
   }
 }
 
 export async function seedFamily() {
-  const count = await FamilyMember.countDocuments();
-  if (count === 0) {
-    await FamilyMember.create({
-      name: 'Yvette',
-      avatar_color: '#f97316',
-      likes: ['chicken rice', 'noodles', 'fish balls'],
-      dislikes: [],
-      cuisines: ['Singaporean', 'Asian'],
-      dietary_restrictions: [],
-    });
-    console.log('Seeded default family member: Yvette.');
+  try {
+    const count = await FamilyMember.countDocuments();
+    if (count === 0) {
+      await FamilyMember.create({
+        name: 'Yvette',
+        avatar_color: '#f97316',
+        likes: ['chicken rice', 'noodles', 'fish balls'],
+        dislikes: [],
+        cuisines: ['Singaporean', 'Asian'],
+        dietary_restrictions: [],
+      });
+      console.log('Seeded default family member: Yvette.');
+    }
+  } catch (err) {
+    console.error('seedFamily failed:', err.message);
   }
 }

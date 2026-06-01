@@ -12,7 +12,10 @@ export async function connectDB() {
       }
       await seedRecipes();
       await seedFamily();
-    })();
+    })().catch(err => {
+      ready = null; // Allow retry on next request
+      throw err;
+    });
   }
   await ready;
 }

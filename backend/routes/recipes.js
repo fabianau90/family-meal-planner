@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import Recipe from '../models/Recipe.js';
+import { seedRecipes } from '../services/seed.js';
 import Rating from '../models/Rating.js';
 
 const router = Router();
@@ -8,6 +9,7 @@ const router = Router();
 // GET recipes — local DB + optional Tavily web search
 router.get('/', async (req, res) => {
   const { q, member_id, web } = req.query;
+  if (!q && !member_id) await seedRecipes(); // Ensure seeded on plain fetch
   const filter = {};
   if (q) filter.title = { $regex: q, $options: 'i' };
   if (member_id) filter.added_by = member_id;
