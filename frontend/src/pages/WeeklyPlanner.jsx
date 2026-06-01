@@ -20,8 +20,6 @@ export default function WeeklyPlanner() {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [picking, setPicking] = useState(null);
-  const [viewRecipe, setViewRecipe] = useState(null);
-  const [loadingRecipe, setLoadingRecipe] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -48,16 +46,6 @@ export default function WeeklyPlanner() {
       const meal = await api.setMealSlot({ week_start: weekStart, day_index: dayIndex, meal_type: mealType, recipe_id: recipe._id || recipe.id });
       setPlan(p => ({ ...p, [`${dayIndex}-${mealType}`]: meal }));
     } catch (err) { console.error(err); }
-  }
-
-  async function openRecipe(id) {
-    setLoadingRecipe(true);
-    setViewRecipe(null);
-    try {
-      const r = await api.getRecipe(id);
-      setViewRecipe(r);
-    } catch (err) { console.error(err); }
-    finally { setLoadingRecipe(false); }
   }
 
   async function clearSlot(dayIndex, mealType) {
@@ -106,7 +94,7 @@ export default function WeeklyPlanner() {
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-stone-400 font-medium mb-0.5">{MEAL_LABEL[meal]}</p>
                         {slot?.recipe_id
-                          ? <button onClick={() => openRecipe(slot.recipe_id._id || slot.recipe_id.id)} className="text-sm font-semibold text-orange-600 truncate hover:underline text-left w-full">{slot.recipe_id.title}</button>
+                          ? <p className="text-sm font-semibold text-stone-800 truncate">{slot.recipe_id.title}</p>
                           : <p className="text-sm text-stone-300">Not planned</p>
                         }
                       </div>
@@ -128,50 +116,6 @@ export default function WeeklyPlanner() {
               </div>
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Recipe detail modal */}
-      {(loadingRecipe || viewRecipe) && (
-        <div className="fixed inset-0 bg-black/50 z-20 flex items-end" onClick={() => { setViewRecipe(null); setLoadingRecipe(false); }}>
-          <div className="bg-white w-full rounded-t-3xl max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            {loadingRecipe ? (
-              <div className="flex justify-center py-16">
-                <div className="w-8 h-8 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
-              </div>
-            ) : viewRecipe && (
-              <>
-                <div className="sticky top-0 bg-white border-b border-stone-100 px-5 py-4 flex justify-between items-start rounded-t-3xl">
-                  <div className="flex-1 mr-3">
-                    <p className="font-bold text-stone-800 text-lg leading-snug">{viewRecipe.title}</p>
-                    {viewRecipe.cuisine && <span className="inline-block bg-orange-50 text-orange-500 text-xs font-semibold px-2 py-0.5 rounded-full mt-1">{viewRecipe.cuisine}</span>}
-                  </div>
-                  <button onClick={() => setViewRecipe(null)} className="w-8 h-8 bg-stone-100 rounded-xl flex items-center justify-center text-stone-500 flex-shrink-0">×</button>
-                </div>
-                <div className="px-5 py-4 space-y-4">
-                  {viewRecipe.description && <p className="text-stone-500 text-sm leading-relaxed">{viewRecipe.description}</p>}
-                  {viewRecipe.ingredients?.length > 0 && (
-                    <div>
-                      <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Ingredients</p>
-                      <ul className="space-y-1">
-                        {viewRecipe.ingredients.map((ing, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-stone-700">
-                            <span className="text-orange-400 mt-0.5 flex-shrink-0">•</span>{ing}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {viewRecipe.instructions && (
-                    <div>
-                      <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Instructions</p>
-                      <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-line">{viewRecipe.instructions}</p>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
         </div>
       )}
 

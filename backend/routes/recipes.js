@@ -94,58 +94,7 @@ Return only valid JSON, no markdown.`,
   }
 });
 
-// POST fetch a recipe from a URL and extract structured data using Claude
-router.post('/fetch-url', async (req, res) => {
-  const { url } = req.body;
-  if (!url) return res.status(400).json({ error: 'url required' });
-
-  let html = '';
-  try {
-    const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-    html = await response.text();
-    // Strip tags and collapse whitespace to keep token count low
-    html = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-               .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-               .replace(/<[^>]+>/g, ' ')
-               .replace(/\s+/g, ' ')
-               .slice(0, 8000);
-  } catch {
-    return res.status(400).json({ error: 'Could not fetch that URL' });
-  }
-
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const response = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 1024,
-    messages: [{
-      role: 'user',
-      content: `Extract the recipe from this webpage text and return a JSON object with these exact fields:
-{
-  "title": "recipe name",
-  "description": "one sentence description",
-  "cuisine": "cuisine type",
-  "ingredients": ["ingredient 1", "ingredient 2"],
-  "instructions": "full step by step instructions as a single string",
-  "source_url": "${url}"
-}
-If no recipe is found return { "error": "No recipe found" }.
-Return only valid JSON, no markdown.
-
-Webpage text:
-${html}`,
-    }],
-  });
-
-  try {
-    const parsed = JSON.parse(response.content[0].text);
-    if (parsed.error) return res.status(400).json({ error: parsed.error });
-    res.json(parsed);
-  } catch {
-    res.status(500).json({ error: 'Could not parse recipe from page' });
-  }
-});
-
-
+router.get('/:id', async (req, res) => {
   const recipe = await Recipe.findById(req.params.id).populate('added_by', 'name avatar_color');
   if (!recipe) return res.status(404).json({ error: 'Recipe not found' });
   res.json(recipe);
