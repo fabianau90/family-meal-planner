@@ -17,7 +17,7 @@ export default function Layout() {
       {/* Top bar */}
       <header className="flex-none bg-white/95 backdrop-blur border-b border-orange-100 px-5 py-4 flex items-center gap-3 z-10">
         <div className="flex-1">
-          <p className="text-xs font-semibold text-orange-400 uppercase tracking-widest leading-none mb-0.5">Tao Kah Chiu</p>
+          <p className="text-xs font-semibold text-orange-400 tracking-widest leading-none mb-0.5">Tau Kah Chiu</p>
           <h1 className="text-lg font-bold text-stone-800 leading-none">{pageTitle}</h1>
         </div>
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white text-sm">
