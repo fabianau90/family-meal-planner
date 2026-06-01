@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useFamily } from '../context/FamilyContext';
 import WebViewer from '../components/WebViewer';
 
 export default function Suggest() {
   const { members } = useFamily();
+  const navigate = useNavigate();
   const [selectedIds, setSelectedIds] = useState([]);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -41,32 +43,53 @@ export default function Suggest() {
   }
 
   function renderWithLinks(text) {
-    if (!recipes.length) return text;
-    const parts = [];
-    let remaining = text;
-    let key = 0;
-    while (remaining.length > 0) {
-      let earliest = null;
-      for (const recipe of recipes) {
-        const idx = remaining.toLowerCase().indexOf(recipe.title.toLowerCase());
-        if (idx !== -1 && (earliest === null || idx < earliest.idx)) {
-          earliest = { idx, recipe };
+    // Process line by line so we can detect ⭐ new suggestions per line
+    return text.split('\n').flatMap((line, li) => {
+      const result = [];
+      let key = li * 1000;
+
+      // Detect ⭐ new suggestion — extract name between ⭐ and the first ( or —
+      const starMatch = line.match(/⭐\s+\*{0,2}([^*(—\n]+?)\*{0,2}\s*(?=[\(*—]|$)/);
+      if (starMatch) {
+        const rawName = starMatch[1].trim();
+        const before = line.slice(0, starMatch.index);
+        const after = line.slice(starMatch.index + starMatch[0].length);
+        result.push(
+          <span key={key++}>{before}⭐ </span>,
+          <button key={key++}
+            onClick={() => navigate('/recipes/new', { state: { prefill: { title: rawName } } })}
+            className="font-semibold text-orange-500 underline underline-offset-2 hover:text-orange-600">
+            {rawName}
+          </button>,
+          <span key={key++} className="text-xs text-stone-400 ml-1">(tap to save)</span>,
+          <span key={key++}>{after}{'\n'}</span>
+        );
+        return result;
+      }
+
+      // Detect 📖 saved recipe names
+      let remaining = line;
+      while (remaining.length > 0) {
+        let earliest = null;
+        for (const recipe of recipes) {
+          const idx = remaining.toLowerCase().indexOf(recipe.title.toLowerCase());
+          if (idx !== -1 && (earliest === null || idx < earliest.idx)) {
+            earliest = { idx, recipe };
+          }
         }
+        if (!earliest) { result.push(remaining); break; }
+        if (earliest.idx > 0) result.push(remaining.slice(0, earliest.idx));
+        result.push(
+          <button key={key++} onClick={() => openRecipe(earliest.recipe._id || earliest.recipe.id)}
+            className="font-semibold text-orange-500 underline underline-offset-2 hover:text-orange-600">
+            {remaining.slice(earliest.idx, earliest.idx + earliest.recipe.title.length)}
+          </button>
+        );
+        remaining = remaining.slice(earliest.idx + earliest.recipe.title.length);
       }
-      if (!earliest) {
-        parts.push(remaining);
-        break;
-      }
-      if (earliest.idx > 0) parts.push(remaining.slice(0, earliest.idx));
-      parts.push(
-        <button key={key++} onClick={() => openRecipe(earliest.recipe._id || earliest.recipe.id)}
-          className="font-semibold text-orange-500 underline underline-offset-2 hover:text-orange-600">
-          {remaining.slice(earliest.idx, earliest.idx + earliest.recipe.title.length)}
-        </button>
-      );
-      remaining = remaining.slice(earliest.idx + earliest.recipe.title.length);
-    }
-    return parts;
+      result.push('\n');
+      return result;
+    });
   }
 
   async function handleSubmit(e) {
