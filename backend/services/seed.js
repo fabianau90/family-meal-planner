@@ -131,8 +131,8 @@ export async function seedRecipes() {
 
 export async function seedFamily() {
   try {
-    const count = await FamilyMember.countDocuments();
-    if (count === 0) {
+    const members = await FamilyMember.find().sort({ createdAt: 1 });
+    if (members.length === 0) {
       await FamilyMember.create({
         name: 'Yvette',
         avatar_color: '#f97316',
@@ -142,6 +142,11 @@ export async function seedFamily() {
         dietary_restrictions: [],
       });
       console.log('Seeded default family member: Yvette.');
+    } else if (members.length > 1) {
+      // Remove duplicates — keep only the first created member
+      const idsToDelete = members.slice(1).map(m => m._id);
+      await FamilyMember.deleteMany({ _id: { $in: idsToDelete } });
+      console.log(`Removed ${idsToDelete.length} duplicate family member(s).`);
     }
   } catch (err) {
     console.error('seedFamily failed:', err.message);
