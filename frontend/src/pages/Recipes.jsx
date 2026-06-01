@@ -69,6 +69,14 @@ export default function Recipes() {
     catch (err) { console.error(err); }
   }
 
+  async function handleDelete(id) {
+    if (!window.confirm('Delete this recipe?')) return;
+    try {
+      await api.deleteRecipe(id);
+      setRecipes(prev => prev.filter(r => (r._id || r.id) !== id));
+    } catch (err) { console.error(err); }
+  }
+
   async function handleScan(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -203,6 +211,7 @@ export default function Recipes() {
                     onEdit={() => navigate(`/recipes/${r._id || r.id}/edit`)}
                     onView={() => r.source_url && setViewerUrl(r.source_url)}
                     onAddToPlanner={() => { setAddingToPlanner(r); setPlannerDay(0); setPlannerMeal('dinner'); }}
+                    onDelete={() => handleDelete(r._id || r.id)}
                   />
                 ))}
               </div>
@@ -326,7 +335,7 @@ function WebRecipeCard({ recipe: r, onView, onSave }) {
   );
 }
 
-function RecipeCard({ recipe: r, onRate, onEdit, onView, onAddToPlanner }) {
+function RecipeCard({ recipe: r, onRate, onEdit, onView, onAddToPlanner, onDelete }) {
   return (
     <div className="bg-white border border-stone-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-3">
@@ -351,6 +360,7 @@ function RecipeCard({ recipe: r, onRate, onEdit, onView, onAddToPlanner }) {
         {r.source_url && (
           <button onClick={onView} className="text-xs text-orange-500 bg-orange-50 px-3 py-1.5 rounded-lg font-medium hover:bg-orange-100 transition-colors">View source</button>
         )}
+        <button onClick={onDelete} className="text-xs text-red-400 bg-red-50 px-3 py-1.5 rounded-lg font-medium hover:bg-red-100 transition-colors">Delete</button>
       </div>
     </div>
   );
