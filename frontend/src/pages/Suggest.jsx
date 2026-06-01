@@ -12,7 +12,14 @@ export default function Suggest() {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState('ai');
   const [viewerUrl, setViewerUrl] = useState(null);
+  const [recipes, setRecipes] = useState([]);
+  const [viewRecipe, setViewRecipe] = useState(null);
+  const [loadingRecipe, setLoadingRecipe] = useState(false);
   const bottomRef = useRef(null);
+
+  useEffect(() => {
+    api.getRecipes().then(res => setRecipes(res.local || []));
+  }, []);
 
   // Auto-select all members (just Yvette)
   useEffect(() => {
@@ -22,6 +29,45 @@ export default function Suggest() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  async function openRecipe(id) {
+    setLoadingRecipe(true);
+    setViewRecipe(null);
+    try {
+      const r = await api.getRecipe(id);
+      setViewRecipe(r);
+    } catch (err) { console.error(err); }
+    finally { setLoadingRecipe(false); }
+  }
+
+  function renderWithLinks(text) {
+    if (!recipes.length) return text;
+    const parts = [];
+    let remaining = text;
+    let key = 0;
+    while (remaining.length > 0) {
+      let earliest = null;
+      for (const recipe of recipes) {
+        const idx = remaining.toLowerCase().indexOf(recipe.title.toLowerCase());
+        if (idx !== -1 && (earliest === null || idx < earliest.idx)) {
+          earliest = { idx, recipe };
+        }
+      }
+      if (!earliest) {
+        parts.push(remaining);
+        break;
+      }
+      if (earliest.idx > 0) parts.push(remaining.slice(0, earliest.idx));
+      parts.push(
+        <button key={key++} onClick={() => openRecipe(earliest.recipe._id || earliest.recipe.id)}
+          className="font-semibold text-orange-500 underline underline-offset-2 hover:text-orange-600">
+          {remaining.slice(earliest.idx, earliest.idx + earliest.recipe.title.length)}
+        </button>
+      );
+      remaining = remaining.slice(earliest.idx + earliest.recipe.title.length);
+    }
+    return parts;
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -99,7 +145,7 @@ export default function Suggest() {
                   ? 'bg-orange-500 text-white rounded-br-sm'
                   : 'bg-stone-100 text-stone-800 rounded-bl-sm'
               }`}>
-                {msg.text}
+                {msg.role === 'assistant' ? renderWithLinks(msg.text) : msg.text}
               </div>
             </div>
           );
@@ -118,6 +164,55 @@ export default function Suggest() {
         )}
         <div ref={bottomRef} />
       </div>
+
+      {/* Recipe detail modal */}
+      {(loadingRecipe || viewRecipe) && (
+        <div className="fixed inset-0 bg-black/50 z-20 flex items-end" onClick={() => { setViewRecipe(null); setLoadingRecipe(false); }}>
+          <div className="bg-white w-full rounded-t-3xl max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            {loadingRecipe ? (
+              <div className="flex justify-center py-16">
+                <div className="w-8 h-8 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+              </div>
+            ) : viewRecipe && (
+              <>
+                <div className="sticky top-0 bg-white border-b border-stone-100 px-5 py-4 flex justify-between items-start rounded-t-3xl">
+                  <div className="flex-1 mr-3">
+                    <p className="font-bold text-stone-800 text-lg leading-snug">{viewRecipe.title}</p>
+                    {viewRecipe.cuisine && <span className="inline-block bg-orange-50 text-orange-500 text-xs font-semibold px-2 py-0.5 rounded-full mt-1">{viewRecipe.cuisine}</span>}
+                  </div>
+                  <button onClick={() => setViewRecipe(null)} className="w-8 h-8 bg-stone-100 rounded-xl flex items-center justify-center text-stone-500 flex-shrink-0">×</button>
+                </div>
+                <div className="px-5 py-4 space-y-4">
+                  {viewRecipe.description && <p className="text-stone-500 text-sm leading-relaxed">{viewRecipe.description}</p>}
+                  {viewRecipe.ingredients?.length > 0 ? (
+                    <div>
+                      <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Ingredients</p>
+                      <ul className="space-y-1">
+                        {viewRecipe.ingredients.map((ing, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-stone-700">
+                            <span className="text-orange-400 mt-0.5 flex-shrink-0">•</span>{ing}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : viewRecipe.source_url && (
+                    <a href={viewRecipe.source_url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-orange-500 font-medium bg-orange-50 px-4 py-3 rounded-xl hover:bg-orange-100 transition-colors">
+                      🔗 View full recipe on source website
+                    </a>
+                  )}
+                  {viewRecipe.instructions && (
+                    <div>
+                      <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-2">Instructions</p>
+                      <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-line">{viewRecipe.instructions}</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <WebViewer url={viewerUrl} onClose={() => setViewerUrl(null)} />
 
