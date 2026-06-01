@@ -30,6 +30,8 @@ export default function Recipes() {
   const [scanPreview, setScanPreview] = useState(null);
   const [scanned, setScanned] = useState(null);
   const [ratings, setRatings] = useState({});
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
   const [addingToPlanner, setAddingToPlanner] = useState(null); // recipe being added
   const [plannerDay, setPlannerDay] = useState(0);
   const [plannerMeal, setPlannerMeal] = useState('dinner');
@@ -63,6 +65,7 @@ export default function Recipes() {
     }
     searchTimeout.current = setTimeout(async () => {
       setSearching(true);
+      setPage(1);
       try {
         const res = await api.getRecipes({ q: search, web: '1' });
         setRecipes(res.local || []);
@@ -154,7 +157,8 @@ export default function Recipes() {
     navigate(`/recipes/${recipe._id || recipe.id}/edit`);
   }
 
-  const displayRecipes = recipes;
+  const totalPages = Math.ceil(recipes.length / PAGE_SIZE);
+  const pagedRecipes = recipes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="px-4 py-6">
@@ -221,31 +225,52 @@ export default function Recipes() {
         </div>
       ) : (
         <>
-          {/* Local recipes */}
-          {displayRecipes.length > 0 && (
-            <div className="mb-6">
-              {search && <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">In your recipes</p>}
-              <div className="space-y-3">
-                {displayRecipes.map(r => (
-                  <RecipeCard
-                    key={r._id || r.id}
-                    recipe={r}
-                    currentRating={ratings[r._id || r.id] ?? null}
-                    onRate={handleRate}
-                    onEdit={() => navigate(`/recipes/${r._id || r.id}/edit`)}
-                    onView={() => r.source_url && setViewerUrl(r.source_url)}
-                    onAddToPlanner={() => { setAddingToPlanner(r); setPlannerDay(0); setPlannerMeal('dinner'); }}
-                    onDelete={() => handleDelete(r._id || r.id)}
-                  />
-                ))}
+          {/* Saved Recipes */}
+          <div className="mb-6">
+            <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">
+              Saved Recipes {recipes.length > 0 && <span className="text-orange-400">({recipes.length})</span>}
+            </p>
+            {recipes.length === 0 ? (
+              <div className="text-center py-10 bg-stone-50 rounded-2xl">
+                <p className="text-2xl mb-2">📖</p>
+                <p className="font-semibold text-stone-600 text-sm mb-1">No saved recipes yet</p>
+                <p className="text-stone-400 text-xs">Add your first recipe or scan a photo!</p>
               </div>
-            </div>
-          )}
+            ) : (
+              <>
+                <div className="space-y-3">
+                  {pagedRecipes.map(r => (
+                    <RecipeCard
+                      key={r._id || r.id}
+                      recipe={r}
+                      currentRating={ratings[r._id || r.id] ?? null}
+                      onRate={handleRate}
+                      onEdit={() => navigate(`/recipes/${r._id || r.id}/edit`)}
+                      onView={() => r.source_url && setViewerUrl(r.source_url)}
+                      onAddToPlanner={() => { setAddingToPlanner(r); setPlannerDay(0); setPlannerMeal('dinner'); }}
+                      onDelete={() => handleDelete(r._id || r.id)}
+                    />
+                  ))}
+                </div>
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-4">
+                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                      className="w-9 h-9 rounded-xl bg-stone-100 text-stone-500 font-bold hover:bg-orange-100 hover:text-orange-500 disabled:opacity-30 transition-colors">‹</button>
+                    <span className="text-sm text-stone-500 font-medium">{page} / {totalPages}</span>
+                    <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                      className="w-9 h-9 rounded-xl bg-stone-100 text-stone-500 font-bold hover:bg-orange-100 hover:text-orange-500 disabled:opacity-30 transition-colors">›</button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
 
-          {/* Web results — same card style as saved recipes */}
-          {webResults.length > 0 && (
+          {/* Web Search Results */}
+          {(webResults.length > 0 || (search && searching)) && (
             <div>
-              {displayRecipes.length > 0 && <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3 mt-6">More results</p>}
+              <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">
+                Search from Web {webResults.length > 0 && <span className="text-orange-400">({webResults.length})</span>}
+              </p>
               <div className="space-y-3">
                 {webResults.map((r, i) => (
                   <WebRecipeCard
@@ -266,18 +291,9 @@ export default function Recipes() {
             </div>
           )}
 
-          {displayRecipes.length === 0 && webResults.length === 0 && !search && (
-            <div className="text-center py-16">
-              <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">📖</div>
-              <p className="font-semibold text-stone-700 mb-1">No recipes yet</p>
-              <p className="text-stone-400 text-sm">Add your first recipe or scan a photo!</p>
-            </div>
-          )}
-          {displayRecipes.length === 0 && webResults.length === 0 && search && (
-            <div className="text-center py-16">
-              <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">📖</div>
-              <p className="font-semibold text-stone-700 mb-1">{search ? 'No results found' : 'No recipes yet'}</p>
-              <p className="text-stone-400 text-sm">{search ? 'Try a different search term' : 'Add your first recipe or scan a photo!'}</p>
+          {search && !searching && webResults.length === 0 && recipes.length === 0 && (
+            <div className="text-center py-10 bg-stone-50 rounded-2xl">
+              <p className="text-stone-500 text-sm">No results found for "{search}"</p>
             </div>
           )}
         </>
