@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useFamily } from '../context/FamilyContext';
 import WebViewer from '../components/WebViewer';
@@ -18,6 +18,7 @@ function getMondayOf(date) {
 
 export default function Recipes() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { activeMember, members } = useFamily();
   const [recipes, setRecipes] = useState([]);
   const [webResults, setWebResults] = useState([]);
@@ -37,12 +38,13 @@ export default function Recipes() {
   const fileRef = useRef(null);
   const searchTimeout = useRef(null);
 
-  // Initial load — top 10 most recent
+  // Reload every time the user navigates to this page
   useEffect(() => {
+    setLoading(true);
     api.getRecipes().then(res => {
       setRecipes(res.local || res);
     }).finally(() => setLoading(false));
-  }, []);
+  }, [location.key]);
 
   // Load ratings whenever we know who the active member is
   useEffect(() => {
@@ -152,7 +154,7 @@ export default function Recipes() {
     navigate(`/recipes/${recipe._id || recipe.id}/edit`);
   }
 
-  const displayRecipes = recipes.slice(0, 10);
+  const displayRecipes = recipes;
 
   return (
     <div className="px-4 py-6">
