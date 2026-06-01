@@ -18,7 +18,7 @@ function getMondayOf(date) {
 
 export default function Recipes() {
   const navigate = useNavigate();
-  const { activeMember } = useFamily();
+  const { activeMember, members } = useFamily();
   const [recipes, setRecipes] = useState([]);
   const [webResults, setWebResults] = useState([]);
   const [loading, setLoading] = useState(true);
